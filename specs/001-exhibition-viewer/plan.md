@@ -235,6 +235,11 @@ defensible starting point, not a measured one.
 
 ## Next Phase
 
-`/speckit.research` — the R1 spike runs first and alone. Nothing else in this plan is worth
-implementing until it reports whether component tests can distinguish "configuration honoured" from
-"configuration ignored".
+**Re-run `/speckit.plan` to complete its own Phase 0**, which produces `research.md`. There is no
+`/speckit.research` command; that name does not exist in Spec Kit. Research is a phase inside
+`speckit.plan`, and the run that produced this file skipped it.
+
+Phase 0 is where the R1 and R2 spikes report. Their results are empirical findings about the toolchain
+and belong in `research.md` under the command's own format — Decision, Rationale, Alternatives
+considered. Nothing else in this plan is worth implementing until R1 reports whether component tests
+can distinguish "configuration honoured" from "configuration ignored".
