@@ -71,9 +71,12 @@
   jargon.
 - Dead code, commented-out blocks, and unused exports MUST NOT be committed. Unused code is
   removed, not parked.
-- Every exercise variant MUST be reachable from the interface without editing source files.
+- Every exercise variant MUST be reachable through the configuration file, not through the
+  interface. The interface MUST NOT expose controls that produce a variant.
 - Rationale: students read, modify, and present this code. Clarity is a functional requirement,
-  not a style preference.
+  not a style preference. The student's task is to make the change in code and then prove it with
+  a passing test, so a control that produces a variant would remove that work rather than teach
+  it, and would hide the very edit the exercise exists to make the student perform.
 
 ## Technology Constraints
 
@@ -121,4 +124,4 @@ corrected rather than followed.
 - Runtime development guidance belongs in `AGENTS.md`, which is subordinate to this document.
 - When a principle and a deadline conflict, the principle holds and scope is cut instead.
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-30 | **Last Amended**: 2026-09-30
+**Version**: 2.0.0 | **Ratified**: 2026-09-30 | **Last Amended**: 2026-09-30
