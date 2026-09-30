@@ -10,6 +10,7 @@
 - [x] Focused on user value and business needs
 - [x] Written for non-technical stakeholders
 - [x] All mandatory sections completed
+- [x] Out-of-scope items are declared explicitly
 
 ## Requirement Completeness
 
@@ -21,6 +22,7 @@
 - [x] Edge cases are identified
 - [x] Scope is clearly bounded
 - [x] Dependencies and assumptions identified
+- [x] No requirement contradicts another
 
 ## Feature Readiness
 
@@ -28,6 +30,7 @@
 - [x] User scenarios cover primary flows
 - [x] Feature meets measurable outcomes defined in Success Criteria
 - [x] No implementation details leak into specification
+- [x] Ambiguous precedence between competing rules is resolved
 
 ## Notes
 
@@ -76,5 +79,39 @@
 - **FR-012** (retarget mid-transition) is a real behaviour requirement but small. If planning finds
   it inflates the camera work, it is the first candidate to defer — it must then be removed from
   the spec rather than silently unimplemented.
-- Image support (**FR-017** through **FR-020**) is scoped as capability, not as shipped content. No
+- Image support (**FR-017** through **FR-023**) is scoped as capability, not as shipped content. No
   binary assets are required to satisfy it, since the fallback path is the initial state.
+
+---
+
+## Re-validation after clarification session (2026-09-30)
+
+**16/16 → 19/19 items passing. No regressions.**
+
+Three items were added and immediately pass, because the clarification session created the evidence
+they check for:
+
+- *Out-of-scope items are declared explicitly* — a dedicated `## Out of Scope` section now records
+  ten exclusions. Previously the checklist item "Scope is clearly bounded" passed only because
+  nothing contradicted the spec; nothing stated what was excluded. That was the weakest pass in the
+  set.
+- *No requirement contradicts another* — FR-011 and FR-013 were mutually unsatisfiable until the
+  reduced-motion question resolved it. The checklist passed this before it was asked.
+- *Ambiguous precedence between competing rules is resolved* — FR-021 now defines a single
+  two-level precedence rule for surfaces, replacing two requirements that could each claim to be
+  the winner.
+
+### Structural changes from the session
+
+- **FR renumbered** from 27 to 35 requirements. Three surface-precedence requirements were inserted
+  mid-list, and the environment chain added five. All ids are contiguous 1–35 with no duplicates.
+- **SC extended** from 12 to 15, adding three outcomes for the environment chain.
+- **`## Clarifications` section added** with a dated session record of all five answers.
+
+### Items to re-check if the spec is amended again
+
+- The constitution conflict recorded below is not a spec defect, so no checklist item captures it.
+  It is tracked against the constitution instead and must be resolved before implementation starts.
+- SC-009 ("typical student laptop") remains unquantified. It was not worth one of the five-question
+  budget; if the target hardware for the course becomes concrete, tighten this to a named baseline
+  device.

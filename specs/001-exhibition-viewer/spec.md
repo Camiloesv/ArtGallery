@@ -8,6 +8,16 @@
 
 **Input**: User description: "A 3D art gallery that teaches students by letting them restyle the exhibition — walls, wall finishes, and paintings — by editing code, verifying with tests, and shipping to production. No visual editor: the code is the interface."
 
+## Clarifications
+
+### Session 2026-09-30
+
+- Q: Should the test suite verify that rendering honours the configuration, or only that the configuration is valid? → A: Component tests that mount the components and assert the rendered result carries the configured values.
+- Q: Where is a focused painting's title, artist, and year presented to the visitor? → B: Rendered as text on the wall panel itself, beside the number, so the project contains no 2D user interface at all.
+- Q: If a wall declares both a named finish and an image, which one is drawn? → A: The image wins and the named finish acts as the fallback, giving a two-level precedence rule.
+- Q: How does the viewpoint behave when the visitor prefers reduced motion? → B: The transition still runs and remains continuous, but completes in a small fraction of the normal duration. No exemption to FR-011 is needed.
+- Q: Is shipping to production part of this feature, and what differs between development, staging, and production? → A: Yes, the feature ships through a dev → staging → production chain, and all three run identical configuration and identical content. Staging is an exact preview of production, and the configuration file contains no environment-conditional values.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - View the Exhibition (Priority: P1)
@@ -82,8 +92,8 @@ test suite, and confirm the rendered exhibition matches.
    the panel's surface visibly differs from a plain matte finish.
 3. **Given** a painting is configured with a colour, **When** the exhibition renders, **Then** the
    painting's surface uses that colour.
-4. **Given** a painting is configured with a title, artist, and year, **When** it is in focus,
-   **Then** those details are presented to the visitor.
+4. **Given** a painting is configured with a title, artist, and year, **When** its wall panel is
+   viewed, **Then** the number, title, artist, and year are all legible on that panel.
 5. **Given** a student has restyled the exhibition, **When** they run the test suite, **Then** the
    tests confirm the configuration is valid and matches what is rendered.
 
@@ -156,7 +166,8 @@ accordingly with no rendering changes.
   presents the piece without that detail rather than failing.
 - The browser window is very narrow or very wide: the exhibition fills the view and remains fully
   visible.
-- The visitor prefers reduced motion: viewpoint transitions complete without extended animation.
+- The visitor prefers reduced motion: the viewpoint transition still runs and is still continuous,
+  but completes in a small fraction of the normal duration.
 
 ## Requirements *(mandatory)*
 
@@ -180,8 +191,9 @@ accordingly with no rendering changes.
   number.
 - **FR-006**: Each wall panel MUST be able to carry a colour, a surface roughness value, and a named
   surface finish.
-- **FR-007**: When a painting is in focus, the system MUST present that painting's title, artist, and
-  year to the visitor.
+- **FR-007**: Each painting's number, title, artist, and year MUST all be presented on its wall
+  panel, as text belonging to the 3D scene. The exhibition MUST contain no 2D user interface of any
+  kind, so descriptive information and labels live only inside the scene.
 - **FR-008**: The system MUST render successfully when optional descriptive fields are absent.
 
 **Viewpoint navigation**
@@ -193,8 +205,9 @@ accordingly with no rendering changes.
 - **FR-011**: All viewpoint transitions MUST be continuous and smooth, with no visible snap.
 - **FR-012**: A new selection made during an in-progress transition MUST retarget the transition to
   the new selection.
-- **FR-013**: The system MUST honour a reduced-motion preference by completing viewpoint
-  transitions without extended animation.
+- **FR-013**: The system MUST honour a reduced-motion preference by shortening the viewpoint
+  transition to a small fraction of its normal duration. The transition MUST still run and MUST
+  remain continuous — reduced motion shortens the movement, it does not replace it with a jump.
 
 **Wall surfaces**
 
@@ -215,24 +228,47 @@ accordingly with no rendering changes.
   and MUST NOT prevent the rest of the exhibition from rendering.
 - **FR-020**: A wall panel MUST be able to display an image supplied by configuration in place of
   its generated surface.
+- **FR-021**: A wall or painting that declares both a named surface finish and an image MUST
+  display the image. The named finish applies only when no image is present, so the precedence
+  rule is: image if present, otherwise the named finish, otherwise plain matte.
+- **FR-022**: An image MUST be scaled to fit inside its surface without visible distortion. If the
+  image's proportions differ from the surface, the image MUST be letterboxed so the full image
+  remains visible rather than cropped.
+- **FR-023**: The image-fit behaviour MUST apply identically to painting surfaces and wall
+  surfaces, so a single rule governs every image in the exhibition.
 
 **Verifiability (the pedagogical requirement)**
 
-- **FR-021**: The system MUST provide automated tests that validate the exhibition configuration
-  without requiring a rendered browser view.
-- **FR-022**: Those tests MUST cover the configuration's structure, its derived numbering and
-  spacing, and its declared wall finishes and painting surfaces.
-- **FR-023**: Those tests MUST fail when a student introduces a configuration error, so a passing
-  suite is evidence the change is sound.
-- **FR-024**: Running the project locally MUST reflect configuration changes without any manual
+- **FR-024**: The system MUST provide automated tests that mount the rendering components and
+  assert that the rendered result carries the values declared in the exhibition configuration,
+  without requiring a real browser.
+- **FR-025**: Those tests MUST cover the chain from configuration to rendered output — wall colour,
+  wall finish, painting colour, painting image, and derived numbering and spacing.
+- **FR-026**: Those tests MUST fail both when a student introduces a configuration error and when
+  the rendering stops honouring a valid configuration. A passing suite is therefore evidence that
+  the change is sound end to end, not merely well-formed.
+- **FR-027**: Running the project locally MUST reflect configuration changes without any manual
   build-step edit.
+
+**Environment chain (development → staging → production)**
+
+- **FR-028**: The exercise MUST progress through a development environment, a staging environment,
+  and a production environment, in that order.
+- **FR-029**: All three environments MUST be served from the same exhibition configuration file.
+  The configuration MUST NOT contain values that vary by environment.
+- **FR-030**: Staging MUST be an exact preview of production: identical content, identical
+  configuration, and identical build output.
+- **FR-031**: A production release MUST be possible only from a commit that already passed in
+  staging, so a passing staging run is the evidence for the production release.
+- **FR-032**: The production build MUST be reproducible from the same source and configuration that
+  staging served, with no manual step between the two.
 
 **Presentation constraints**
 
-- **FR-025**: The system MUST NOT provide any visual interface for editing the exhibition. The
+- **FR-033**: The system MUST NOT provide any visual interface for editing the exhibition. The
   configuration file is the only authoring surface.
-- **FR-026**: The rendered exhibition MUST fill the available view at any window size.
-- **FR-027**: All user-facing text MUST be in English.
+- **FR-034**: The rendered exhibition MUST fill the available view at any window size.
+- **FR-035**: All user-facing text MUST be in English.
 
 ### Key Entities
 
@@ -263,10 +299,11 @@ accordingly with no rendering changes.
   rendering logic.
 - **SC-006**: A student can point a painting at an image file and see that image inside the frame,
   by editing configuration only.
-- **SC-007**: An automated test suite runs in under 10 seconds and validates the whole exhibition
-  configuration without opening a browser.
-- **SC-008**: A deliberately broken configuration causes the test suite to fail, and fixing it causes
-  the suite to pass again.
+- **SC-007**: An automated test suite runs in under 10 seconds, mounts the rendering components
+  headlessly, and fails if the rendered result disagrees with the exhibition configuration.
+- **SC-008**: A deliberately broken configuration causes the test suite to fail, fixing it causes
+  the suite to pass again, and deliberately breaking the rendering so it ignores a valid
+  configuration also causes the suite to fail.
 - **SC-009**: The exhibition becomes interactive and fully navigable within 3 seconds of the page
   finishing loading on a typical student laptop.
 - **SC-010**: Viewpoint transitions contain no visible snapping or teleport; the viewpoint moves
@@ -274,14 +311,22 @@ accordingly with no rendering changes.
 - **SC-011**: A missing or undecodable image causes at most that one painting to fall back to its
   colour; the rest of the exhibition continues to render and navigate normally.
 - **SC-012**: No on-screen control for editing the exhibition exists anywhere in the interface.
+- **SC-013**: The exhibition rendered in staging is visually and behaviourally indistinguishable
+  from the one in production, with no content or configuration difference between them.
+- **SC-014**: A student can promote a change from development to staging to production in a single
+  automated step per environment, with no manual editing of configuration at any transition.
+- **SC-015**: The production deployment can be traced back to the exact commit that passed in
+  staging.
 
 ## Assumptions
 
 - The project is a brand-new repository; there is no existing system to integrate with or migrate
   from.
-- Changes are authored by editing files locally, verified by running the test suite, and then
-  shipped. There is no runtime configuration service, no shared backend, and no save-to-browser
-  requirement — the configuration file is the single source of truth.
+- Changes are authored by editing files locally, verified by running the test suite, promoted to
+  staging, and then released to production. All three environments read the same configuration file,
+  so the configuration is the single source of truth and holds no environment-conditional values.
+- Staging exists to prove a change, not to host different content. Because staging and production
+  are identical, a green staging run is the evidence for the production release.
 - The exhibition ships with flat colours as placeholder content. Real imagery is a student exercise,
   so the repository carries no binary image assets at launch.
 - A single exhibition is in scope. Multiple exhibitions, exhibitions loaded at runtime, or
@@ -294,3 +339,26 @@ accordingly with no rendering changes.
 - Third-party runtime dependencies are limited to the stack already fixed in the project
   constitution, and each is used for exactly one role.
 - The 24-piece count is a starting default, not a fixed limit; the count lives in configuration.
+
+## Out of Scope
+
+The following are explicitly not part of this feature. Each is listed so that its absence is a
+decision rather than an omission.
+
+- **Any visual editing interface.** The configuration file is the only authoring surface. Adding a
+  panel, drawer, or in-scene manipulator would defeat the purpose of the exercise.
+- **Environment-conditional content.** Staging and production serve identical exhibitions, so there
+  is no reduced smoke-test exhibition and no per-environment configuration.
+- **Multiple exhibitions, exhibition switching, or runtime-loaded collections.** One exhibition at
+  a time.
+- **Accounts, authentication, and per-student persistence.** Student work lives in their own clone
+  and their own commits.
+- **Sharing or collaboration between students.** Merging two students' restyled walls is out of
+  scope.
+- **Server-side rendering, a backend, or a database.** The exhibition is a client-side experience.
+- **A gallery management admin panel.** The same constraint as the editing interface, applied to
+  exhibition lifecycle operations.
+- **Audio, video, and non-image media in artworks.** Images only.
+- **Optimised mobile and tablet layout.** The exhibition must remain visible at any window size, but
+  touch-first layout is not a goal.
+- **Analytics, telemetry, and usage tracking.**
