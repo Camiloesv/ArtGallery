@@ -166,8 +166,32 @@ else. **SC-017** makes that a stated expectation rather than a discovery.
 - **`## Out of Scope`** rewrote two entries that had become false: per-student persistence, and
   collaboration between students.
 
+### The contradiction the first round could not see
+
+FR-030 promised staging and production have "identical build output", and FR-032 promised the
+production build is "reproducible from the same source" that staging served. Round two then
+introduced two different branches — staging deploys from `staging`, production from `main`, joined by
+an instructor merge. Under a normal merge those two claims cannot both hold: a merge commit leaves
+production built from a commit staging never served.
+
+Resolved by **FR-042**, which requires promotion to be fast-forward only, so both branches resolve
+to one commit and the original guarantee survives. **SC-019** makes it observable at the commit
+level rather than the content level.
+
+This is the second time a requirement pair survived a checklist pass and then broke on new
+information. Both times the cause was the same: a fact nobody was asked for. The checklist tests
+consistency, and consistency is silent about anything it was never told.
+
+- **FR renumbered again** 44 → 45 after FR-042 was inserted. An id gap at FR-043 was introduced and
+  caught by the contiguity check before commit.
+- **SC extended** 18 → 19. All ids contiguous 1–19.
+- **`## Clarifications`** gained a second dated session recording the four topology answers. The
+  first round left the spec unable to explain why the shared branch was chosen.
+
 ### Open, not blocking
 
 - SC-009 remains unquantified, as above.
 - The constitution fixes the stack but names no operating system, and the development environment is
   now known to be Linux. The assumption is recorded in the spec; the constitution is silent on it.
+  This is the third unasked fact in a row, and the pattern is consistent enough to be worth treating
+  as a process gap rather than bad luck.

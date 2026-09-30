@@ -19,6 +19,17 @@ repository was initialized, so all work is currently committed on `main`)
 - Q: How does the viewpoint behave when the visitor prefers reduced motion? → B: The transition still runs and remains continuous, but completes in a small fraction of the normal duration. No exemption to FR-011 is needed.
 - Q: Is shipping to production part of this feature, and what differs between development, staging, and production? → A: Yes, the feature ships through a dev → staging → production chain, and all three run identical configuration and identical content. Staging is an exact preview of production, and the configuration file contains no environment-conditional values.
 
+### Session 2026-09-30, second round — course topology
+
+This round corrected the first. The first session assumed the development environment was the
+student's own machine and that student work lived in private clones. Both were wrong, and the
+wrongness surfaced only when the development environment was identified as a Codio sandbox.
+
+- Q: What is the development environment? → A: A Codio sandbox, which presents a live preview of the exhibition so that a configuration change is visible without a separate deploy step. The sandbox runs Linux.
+- Q: How do students reach the exercise, and how is a change promoted? → A: Students are collaborators on one public repository. A change goes to staging by pushing to the shared staging branch, and reaches production only after the instructor accepts it and merges to main.
+- Q: How is concurrent student work isolated on a single shared repository? → C: All students submit to the same staging branch with no reset between submissions. A submission is therefore ephemeral, and the gallery served in staging is whichever submission arrived last. This is a deliberate teaching constraint: coordinating a pull before a push is part of the exercise.
+- Q: Which commit reaches production, and how does it get there? → A: Only a commit that passed in staging and that the instructor accepted, merged to main by fast-forward only, so that main and staging resolve to the same commit and staging remains an exact preview of production.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - View the Exhibition (Priority: P1)
@@ -288,13 +299,16 @@ accordingly with no rendering changes.
 - **FR-040**: Only the instructor MAY merge to main. A student MUST NOT be able to promote their own
   submission to production.
 - **FR-041**: A merge to main MUST contain no exhibition edits beyond the accepted commit.
+- **FR-042**: Promotion to main MUST be a fast-forward, so that main and the staging branch resolve
+  to the same commit. A merge commit MUST NOT be created, because it would leave production built
+  from a commit that staging never served and would break the guarantee in FR-030.
 
 **Presentation constraints**
 
-- **FR-042**: The system MUST NOT provide any visual interface for editing the exhibition. The
+- **FR-043**: The system MUST NOT provide any visual interface for editing the exhibition. The
   configuration file is the only authoring surface.
-- **FR-043**: The rendered exhibition MUST fill the available view at any window size.
-- **FR-044**: All user-facing text MUST be in English.
+- **FR-044**: The rendered exhibition MUST fill the available view at any window size.
+- **FR-045**: All user-facing text MUST be in English.
 
 ### Key Entities
 
@@ -351,6 +365,8 @@ accordingly with no rendering changes.
   this, because the exercise states it; it is not a surprise discovered mid-task.
 - **SC-018**: A student without permission on the main branch cannot promote their own submission to
   production by any means available to them.
+- **SC-019**: After an accepted submission is promoted, the commit deployed to production and the
+  commit serving staging are the same commit, not merely the same content.
 
 ## Assumptions
 
