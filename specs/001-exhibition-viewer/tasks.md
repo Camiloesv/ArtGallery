@@ -8,10 +8,12 @@ description: "Task list for 001-exhibition-viewer"
 **Input**: Design documents from `specs/001-exhibition-viewer/`
 
 **Prerequisites**: plan.md, spec.md
-**Not yet produced**: research.md, data-model.md, contracts/ — see Phase 0. `data-model.md` is the
-only one with a real dependency; its content is the exhibition configuration type, which T012
-implements. If the R1 spike forces a change to how configuration is observed, T012 and everything
-downstream must be revisited.
+
+**Deliberately absent**: `data-model.md` and `contracts/`. Both are in the Spec Kit template and both
+are omitted on purpose. There is no database, no backend, and no API, so there is no model and no
+contract. The exhibition configuration type plays that role and lives in `src/config/exhibition.ts`,
+because a Markdown description of the type would be a second source of truth that can drift from the
+one FR-003 makes authoritative. T012 is its test.
 
 **Tests**: Required. The constitution makes Principle II non-negotiable, so the test tasks below are
 not optional. Each MUST be written and observed failing before its implementation task.
@@ -85,7 +87,9 @@ renegotiate the spec before continuing.
 
 - [ ] T012 Write `tests/unit/exhibitionConfig.test.ts` asserting the exhibition configuration type
       rejects an unknown finish name, a non-positive count, and a duplicate position, and accepts
-      the starter exhibition. **Run it and observe it fail.**
+      the starter exhibition. **This task is the executable contract for the configuration shape,
+      and replaces the data-model document the Spec Kit template would normally ask for. Run it and
+      observe it fail.**
 - [ ] T013 Implement the exhibition configuration type and the starter exhibition in
       `src/config/exhibition.ts`. This is the only authoring surface in the project
 - [ ] T014 [P] Write `tests/unit/cameraTarget.test.ts` asserting the viewpoint math produces a

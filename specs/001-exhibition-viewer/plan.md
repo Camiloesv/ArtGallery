@@ -154,12 +154,20 @@ one. Cover it in the quickstart and in the first exercise brief, not just the sp
 specs/001-exhibition-viewer/
 ├── spec.md              # the specification
 ├── plan.md              # this file
-├── research.md          # Phase 0 output — R1 spike results, peer-compat matrix
-├── data-model.md        # Phase 1 output — the exhibition config type
-├── quickstart.md        # Phase 1 output — student-facing setup and the shared-branch warning
-├── contracts/           # Phase 1 output — config schema contract
-└── tasks.md             # Phase 2 output, from /speckit.tasks (not created here)
+├── research.md          # Phase 0 output — R1 and R2 spike results, peer-compat matrix
+├── quickstart.md        # student-facing setup and the shared-branch warning
+└── tasks.md             # Phase 2 output, from /speckit.tasks
 ```
+
+**No data-model.md and no contracts/ directory.** The Spec Kit template lists both, and both are
+omitted deliberately. This project has no database, no backend, and no API, so there is nothing to
+model and no contract to negotiate.
+
+The exhibition configuration type is the one artifact that plays that role, and it belongs in
+`src/config/exhibition.ts` rather than in a Markdown file that would drift from it. A second
+description of the type is a second source of truth, which FR-003 forbids in substance even if the
+disagreement is only documentation. TypeScript validates the type at compile time; a document does
+not. The real validation is T012, which tests the type's rejection and acceptance rules.
 
 ### Source Code (repository root)
 
