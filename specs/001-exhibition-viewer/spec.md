@@ -1,10 +1,11 @@
 # Feature Specification: Exhibition Viewer
 
-**Feature Branch**: `001-exhibition-viewer` (no branch created — repository is not yet under version control)
+**Feature Branch**: `001-exhibition-viewer` (nominal identifier; the spec was authored before the
+repository was initialized, so all work is currently committed on `main`)
 
 **Created**: 2026-09-30
 
-**Status**: Draft
+**Status**: Clarified — ready for `/speckit.plan`
 
 **Input**: User description: "A 3D art gallery that teaches students by letting them restyle the exhibition — walls, wall finishes, and paintings — by editing code, verifying with tests, and shipping to production. No visual editor: the code is the interface."
 
