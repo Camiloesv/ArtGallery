@@ -80,6 +80,12 @@
 
 ## Technology Constraints
 
+- The target platform is Linux, in a Codio sandbox. It is the platform the exercise is authored,
+  verified, and taught against, and the only one on which the exercise is guaranteed to work. A
+  change that only works on macOS or Windows is out of scope, even if it is convenient to author.
+- Development tooling MUST run on that Linux sandbox, and student-facing instructions and scripts
+  MUST assume a POSIX shell. Windows-only tooling is not acceptable, and a Windows-only path is not
+  a supported convenience.
 - Build tool MUST be Vite. No server-side rendering framework; this is a client-side WebGL
   experience and SSR would impose constraints without benefit.
 - Rendering MUST go through `@react-three/fiber` on top of Three.js. Imperative scene mutation
@@ -124,4 +130,4 @@ corrected rather than followed.
 - Runtime development guidance belongs in `AGENTS.md`, which is subordinate to this document.
 - When a principle and a deadline conflict, the principle holds and scope is cut instead.
 
-**Version**: 2.0.0 | **Ratified**: 2026-09-30 | **Last Amended**: 2026-09-30
+**Version**: 2.1.0 | **Ratified**: 2026-09-30 | **Last Amended**: 2026-09-30
