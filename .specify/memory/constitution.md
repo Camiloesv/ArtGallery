@@ -20,13 +20,19 @@
   observed failing before implementation begins.
 - A feature is not complete until the new test passes and the suite is refactored while still
   green.
-- Pure logic — station configuration, wall presets, texture generation parameters, camera
-  targeting math — MUST be testable without a WebGL context.
-- Scene components are exempt from unit tests, but any change to them MUST be verified in a
-  running browser.
+- Rendering components MUST be covered by tests that mount them and assert the rendered result
+  carries the declared configuration. A test that only validates the shape of a configuration file
+  is NOT sufficient: it would pass while the rendering silently ignored a valid value.
+- Component tests MUST run without a real browser or a real graphics context, so that the suite
+  stays fast and runs in any environment. Where a property cannot be asserted without a real
+  renderer, the test MUST assert the value handed to the graphics layer instead of the pixels.
+- Changes to scene components MUST still be confirmed in a running browser before they are
+  considered done. Component tests are necessary, not sufficient: they prove the configuration
+  reached the render, and only a browser proves the result looks right.
 - No test may be deleted, skipped, or weakened to make a suite pass.
-- Rationale: the test suite is the primary artifact students read as a specification, so the
-  discipline has to be visible in the repository.
+- Rationale: the test suite is the primary artifact students read as a specification. For that
+  purpose it must be evidence about the rendered result, not merely about a file's syntax, or it
+  would certify work that does not work.
 
 ### III. SOLID and Layered Boundaries
 
@@ -115,4 +121,4 @@ corrected rather than followed.
 - Runtime development guidance belongs in `AGENTS.md`, which is subordinate to this document.
 - When a principle and a deadline conflict, the principle holds and scope is cut instead.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-30 | **Last Amended**: 2026-09-30
+**Version**: 1.1.0 | **Ratified**: 2026-09-30 | **Last Amended**: 2026-09-30
