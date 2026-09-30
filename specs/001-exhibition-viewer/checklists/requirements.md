@@ -110,8 +110,64 @@ they check for:
 
 ### Items to re-check if the spec is amended again
 
-- The constitution conflict recorded below is not a spec defect, so no checklist item captures it.
-  It is tracked against the constitution instead and must be resolved before implementation starts.
 - SC-009 ("typical student laptop") remains unquantified. It was not worth one of the five-question
   budget; if the target hardware for the course becomes concrete, tighten this to a named baseline
   device.
+
+---
+
+## Second re-validation — Codio and the course topology (2026-09-30)
+
+**19/19 still passing, but two items had been passing for the wrong reason and were rewritten.**
+
+### What prompted this round
+
+A clarification arrived after the first session closed: the development environment is a **Codio
+sandbox**, and students are **collaborators on one public repository** submitting to a **shared
+staging branch** without a reset between submissions. Production deploys from `main`, and only the
+instructor merges.
+
+### Two checklist items that had been lying
+
+- *No requirement contradicts another* passed while the spec said "student work lives in their own
+  clone and their own commits" and "sharing between students is out of scope". Both contradicted the
+  actual course topology. This item had been earned by a first round in which the topology was
+  never asked about, which is exactly the failure mode this checklist exists to catch.
+- *All functional requirements have clear acceptance criteria* passed while SC-014 promised a
+  student could promote to production. FR-040 says only the instructor may. The success criterion
+  was false, not merely untestable.
+
+The general lesson: this checklist verifies internal consistency, and it had been passing on a spec
+that was internally consistent and externally wrong. An item cannot detect a fact it was never
+given.
+
+### Four requirements were removed rather than amended
+
+The concurrency model was decided after several drafts were written for a different one. Those
+drafts were false under the chosen model and were deleted instead of being softened:
+
+- "no student can observe or overwrite another student's unfinished work" — false, a push replaces
+  the previous submission
+- "the staging branch MUST be returned to a known baseline" — the model explicitly has no reset
+- "returning staging to baseline MUST NOT affect production" — no longer had a subject
+- "every student starts from identical exhibition content" — false without a reset
+
+They are replaced by **FR-036** through **FR-041**, which state the cost of the shared branch
+outright: a submission is ephemeral in staging, and the gallery on screen may belong to somebody
+else. **SC-017** makes that a stated expectation rather than a discovery.
+
+### Structural changes
+
+- **FR renumbered** 35 → 44. All ids contiguous 1–44, no duplicates. Three duplicate ids introduced
+  mid-edit were caught and removed before commit.
+- **SC extended** 15 → 18. All ids contiguous 1–18.
+- **`## Assumptions`** gained the shared-branch trade-off, recorded as a deliberate teaching
+  constraint rather than an oversight.
+- **`## Out of Scope`** rewrote two entries that had become false: per-student persistence, and
+  collaboration between students.
+
+### Open, not blocking
+
+- SC-009 remains unquantified, as above.
+- The constitution fixes the stack but names no operating system, and the development environment is
+  now known to be Linux. The assumption is recorded in the spec; the constitution is silent on it.

@@ -248,28 +248,53 @@ accordingly with no rendering changes.
 - **FR-026**: Those tests MUST fail both when a student introduces a configuration error and when
   the rendering stops honouring a valid configuration. A passing suite is therefore evidence that
   the change is sound end to end, not merely well-formed.
-- **FR-027**: Running the project locally MUST reflect configuration changes without any manual
-  build-step edit.
+- **FR-027**: Running the exercise in the development environment MUST reflect configuration
+  changes without any manual build-step edit.
 
 **Environment chain (development → staging → production)**
 
 - **FR-028**: The exercise MUST progress through a development environment, a staging environment,
-  and a production environment, in that order.
+  and a production environment, in that order. The three environments are:
+  - **Development**: the Codio sandbox the student works in, providing a live preview of the
+    exhibition without a separate deploy step.
+  - **Staging**: a deployed environment built from the repository's staging branch.
+  - **Production**: a deployed environment promoted to only after the instructor accepts the
+    change.
 - **FR-029**: All three environments MUST be served from the same exhibition configuration file.
   The configuration MUST NOT contain values that vary by environment.
 - **FR-030**: Staging MUST be an exact preview of production: identical content, identical
   configuration, and identical build output.
-- **FR-031**: A production release MUST be possible only from a commit that already passed in
-  staging, so a passing staging run is the evidence for the production release.
+- **FR-031**: A production release MUST be possible only from a specific commit that already
+  passed in staging and that the instructor has accepted. Promotion is a human approval and MUST
+  NOT include editing the exhibition configuration.
 - **FR-032**: The production build MUST be reproducible from the same source and configuration that
-  staging served, with no manual step between the two.
+  staging served. Promotion between the two environments MUST NOT require any manual edit to the
+  exhibition, and MUST NOT require re-entering any exhibition value.
+- **FR-033**: Students MUST reach the development environment through the Codio sandbox, which
+  MUST present a live preview of the exhibition after a configuration change is saved.
+- **FR-034**: Students MUST reach the exercise through a public repository on which they hold
+  collaborator access, and MUST NOT be required to request access per environment.
+- **FR-035**: The repository's staging branch MUST be the single submission channel. A student
+  submits by pushing a commit to it, and that push is what causes the staging deployment.
+- **FR-036**: A student MUST pull the staging branch before pushing, so that the submitted commit is
+  built on the current staging state rather than replacing an unseen submission.
+- **FR-037**: The staging branch MUST serve only the most recent submission. A later submission
+  replaces the exhibition content that staging serves, and earlier submissions are not
+  simultaneously reachable from staging.
+- **FR-038**: The exercise MUST NOT imply that a submission remains visible in staging, because any
+  other student's push replaces it. The gallery shown in staging is whichever submission arrived
+  last, which may belong to somebody else.
+- **FR-039**: Production MUST be deployed from the repository's main branch.
+- **FR-040**: Only the instructor MAY merge to main. A student MUST NOT be able to promote their own
+  submission to production.
+- **FR-041**: A merge to main MUST contain no exhibition edits beyond the accepted commit.
 
 **Presentation constraints**
 
-- **FR-033**: The system MUST NOT provide any visual interface for editing the exhibition. The
+- **FR-042**: The system MUST NOT provide any visual interface for editing the exhibition. The
   configuration file is the only authoring surface.
-- **FR-034**: The rendered exhibition MUST fill the available view at any window size.
-- **FR-035**: All user-facing text MUST be in English.
+- **FR-043**: The rendered exhibition MUST fill the available view at any window size.
+- **FR-044**: All user-facing text MUST be in English.
 
 ### Key Entities
 
@@ -314,20 +339,32 @@ accordingly with no rendering changes.
 - **SC-012**: No on-screen control for editing the exhibition exists anywhere in the interface.
 - **SC-013**: The exhibition rendered in staging is visually and behaviourally indistinguishable
   from the one in production, with no content or configuration difference between them.
-- **SC-014**: A student can promote a change from development to staging to production in a single
-  automated step per environment, with no manual editing of configuration at any transition.
+- **SC-014**: A student can go from editing the configuration in the sandbox to seeing their
+  submission live in staging with a single push, with no manual configuration edit at any point in
+  the chain.
 - **SC-015**: The production deployment can be traced back to the exact commit that passed in
   staging.
+- **SC-016**: After a student pushes, the gallery served in staging becomes that student's
+  exhibition within the deployment window, with no further action from them.
+- **SC-017**: After a different student pushes, the gallery served in staging becomes that other
+  student's exhibition, and the first submission is no longer served. The students already know
+  this, because the exercise states it; it is not a surprise discovered mid-task.
+- **SC-018**: A student without permission on the main branch cannot promote their own submission to
+  production by any means available to them.
 
 ## Assumptions
 
 - The project is a brand-new repository; there is no existing system to integrate with or migrate
   from.
-- Changes are authored by editing files locally, verified by running the test suite, promoted to
-  staging, and then released to production. All three environments read the same configuration file,
-  so the configuration is the single source of truth and holds no environment-conditional values.
+- Changes are authored in the Codio sandbox, verified by running the test suite, promoted to
+  staging, and then released to production after the instructor accepts the change. All three
+  environments read the same configuration file, so the configuration is the single source of truth
+  and holds no environment-conditional values.
 - Staging exists to prove a change, not to host different content. Because staging and production
   are identical, a green staging run is the evidence for the production release.
+- The development sandbox runs Linux, which is the platform the exercise is authored and verified
+  against. The instructor's acceptance of a change is the gate between staging and production, and
+  it carries no exhibition edits.
 - The exhibition ships with flat colours as placeholder content. Real imagery is a student exercise,
   so the repository carries no binary image assets at launch.
 - A single exhibition is in scope. Multiple exhibitions, exhibitions loaded at runtime, or
@@ -340,6 +377,9 @@ accordingly with no rendering changes.
 - Third-party runtime dependencies are limited to the stack already fixed in the project
   constitution, and each is used for exactly one role.
 - The 24-piece count is a starting default, not a fixed limit; the count lives in configuration.
+- The shared staging branch is a deliberate teaching constraint, not an oversight: coordinating a
+  pull before a push is part of what the exercise is meant to teach. Its cost is that submissions
+  are ephemeral in staging, which FR-037 and FR-038 state plainly rather than hide.
 
 ## Out of Scope
 
@@ -352,10 +392,12 @@ decision rather than an omission.
   is no reduced smoke-test exhibition and no per-environment configuration.
 - **Multiple exhibitions, exhibition switching, or runtime-loaded collections.** One exhibition at
   a time.
-- **Accounts, authentication, and per-student persistence.** Student work lives in their own clone
-  and their own commits.
-- **Sharing or collaboration between students.** Merging two students' restyled walls is out of
-  scope.
+- **Accounts, authentication, and per-student persistence.** Access is a single collaborator grant
+  on one public repository. There is no per-student account, no per-student environment, and no
+  server-side record of who authored which exhibition state.
+- **Guaranteeing that a submission stays visible in staging.** The staging branch serves the most
+  recent submission only. If a submission must persist, the accepted path is the instructor's
+  merge to main, not staging.
 - **Server-side rendering, a backend, or a database.** The exhibition is a client-side experience.
 - **A gallery management admin panel.** The same constraint as the editing interface, applied to
   exhibition lifecycle operations.
