@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" role="img" aria-label="Abstract warm current painting">
+  <rect width="600" height="900" fill="#e9ddca"/>
+  <path d="M0 0h270c-32 190 155 236 87 409S177 623 260 900H0Z" fill="#b96f57"/>
+  <path d="M600 0H376c80 142-18 264 76 377s107 262 38 523h110Z" fill="#718879"/>
+  <circle cx="310" cy="440" r="118" fill="#d5ad69"/>
+  <path d="M185 440h250M310 315v250" stroke="#f0e5d2" stroke-width="10"/>
+</svg>

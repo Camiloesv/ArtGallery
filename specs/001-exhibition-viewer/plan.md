@@ -13,18 +13,20 @@ proving the change with a test suite, and shipping it through a three-environmen
 Linux sandbox for development, a Vercel preview built from the shared `staging` branch, and a Vercel
 production deployment built from `main` after the instructor accepts the change.
 
-The technical approach is deliberately thin. Every visual parameter is data in one config file; the
-scene reads that data and nothing else. There is no editor, no backend, no database, and no
-environment-conditional configuration, so the same config file produces the same exhibition in all
+The technical approach is deliberately thin. Every visual parameter is data in one config file; each
+station owns its wall and painting values, and the scene reads that data and nothing else. There is
+no editor, no backend, no database, and no environment-conditional configuration, so the same config
+file produces the same exhibition in all
 three environments. The interesting engineering is not the rendering — it is the test strategy that
 can prove a configuration change actually reached the render without a browser, which is the
 constraint the constitution imposes and the one most likely to fail.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x (npm reports 7.0.2 as current; see risk R3) on Node 22 LTS or
-later. The Codio sandbox Node version is **unverified** and must be confirmed during Phase 0 before
-any dependency is pinned. Pin the project with an `.nvmrc`.
+**Language/Version**: TypeScript 5.9.3 on Node 24.14.1 (`.nvmrc`); `package.json` must require Node
+>=22.12.0, the minimum intersection required by Vite 8.3.1 and Vitest 5.0.3. This exact version and
+the full candidate toolchain passed installation/build checks on the available Windows host. Codio's
+runtime remains unverified and must be checked before claiming target-environment compatibility.
 
 **Primary Dependencies** (versions current at plan time, 2026-09-30, from the npm registry):
 
@@ -59,6 +61,8 @@ constitution Principle II:
 - **Manual browser tier** — a change touching a scene component is confirmed in the running Codio
   dev server before it counts as done. The constitution declares component tests necessary but not
   sufficient, and this is the half that is not automated.
+- **Keyboard navigation tier** — pure key-to-station movement is tested without the renderer; the
+  camera integration remains covered by mounted CameraRig assertions and manual browser review.
 
 **Target Platform**: Linux in a Codio sandbox (constitution v2.1.0). POSIX shell for all student-facing
 scripts. Client-side WebGL 2, no SSR. Deployed as a static build to Vercel.
@@ -87,8 +91,10 @@ Disk is not a constraint at 4.3 GB free, so `node_modules` at a few hundred mega
 dependency on third-party asset services; procedural Canvas 2D surfaces; all user-facing strings,
 identifiers, comments, and docs in English; no visual authoring interface of any kind.
 
-**Scale/Scope**: one exhibition, 24 paintings as the configurable default, four named wall finishes,
-one material slot per artwork. The count is configuration, not a constant.
+**Scale/Scope**: one exhibition, 24 paintings as the configurable default, each station with an
+independent coloured wall and painting. Four named wall finishes are available. The memory estimate
+allows one generated wall texture and up to two configured image textures per station. The count is
+configuration, not a constant.
 
 ## Constitution Check
 
@@ -97,44 +103,45 @@ one material slot per artwork. The count is configuration, not a constant.
 | # | Gate | Result |
 |---|---|---|
 | G1 | No runtime dependency outside the constitution stack. | **PASS** — five runtime packages, every one named in Tech Constraints. The three dev-only packages do not count against Principle I. |
-| G2 | Every behavior preceded by a test observed failing (Principle II). | **PASS with a risk** — see R1. The strategy is sound only if `@react-three/test-renderer` exposes enough scene graph to assert FR-025. Unverified until the Phase 0 spike. |
-| G3 | Component tests run without a real browser or graphics context (Principle II v1.1.0). | **PASS** — `@react-three/test-renderer` is designed for exactly this. Must be confirmed in the spike, not assumed. |
+| G2 | Every behavior preceded by a test observed failing (Principle II). | **PASS for the renderer assertion strategy** — R1's positive/negative scene-graph spike passed on Windows; retain Codio/Linux verification as a target check. |
+| G3 | Component tests run without a real browser or graphics context (Principle II v1.1.0). | **PASS locally** — `@react-three/test-renderer` mounted a scene without WebGL; verify the suite again in Codio for target compatibility. |
 | G4 | Layered boundaries (Principle III). | **PASS** — config, surfaces, scene, and navigation are separate and navigation math is pure. |
 | G5 | Configuration over code (Principle IV). | **PASS** — `src/config/exhibition.ts` is the sole authoring surface; no exhibition value appears in a component. |
 | G6 | No state-management library (Principle I). | **PASS** — `useState` and `useReducer` only. |
 | G7 | No visual editing interface (Principle V as amended in v2.0.0). | **PASS** — no controls, no drawer, no manipulator. All text is 3D in-scene per FR-007. |
-| G8 | Linux and POSIX shell only (constitution v2.1.0). | **PASS with a risk** — see R2. The Spec Kit scripts in this repository are PowerShell, authored on Windows. They are operator tooling, not student tooling, but the distinction must stay explicit. |
+| G8 | Linux and POSIX shell only (constitution v2.1.0). | **PASS** — student tooling targets Linux/POSIX. The repository's PowerShell Spec Kit scripts are operator tooling, not student tooling. |
 | G9 | No dead code, commented-out blocks, or unused exports (Principle V). | **PASS** — enforced by lint and the review gate. |
 | G10 | English throughout. | **PASS** — all identifiers, comments, and UI strings. |
 
-**Verdict: PASS.** Two gates carry unverified risk (G2, G3, G8) and are the first items in Phase 0. No
-violations requiring a Complexity Tracking entry.
+**Verdict: PASS for local development.** Codio runtime, network preview, and memory acceptance remain
+target-environment checks. No violations requiring a Complexity Tracking entry.
 
 ## Risks
 
 These are ordered by the probability that they invalidate work already done, not by effort.
 
-**R1 — `@react-three/test-renderer` may not expose enough to satisfy FR-025 and FR-026.** This is the
-single highest risk in the project. Constitution v1.1.0 requires component tests that mount the render
-and assert the configured values are carried, and the spec doubles down: FR-026 requires the suite to
-fail when the rendering *ignores a valid configuration*. That means the test must observe the scene
-graph, not merely a call argument. If the test renderer only gives a serialized tree too shallow to
-distinguish "honoured" from "ignored", the whole test strategy in the spec is unimplementable as
-written. **Spike this in Phase 0 before writing any other test.** If it fails, escalate: either the
-component structure must expose a testable seam, or FR-026 has to be renegotiated. Do not paper over
-it by asserting on props.
+**R1 — preserve scene-graph assertions in the full suite.** The temporary positive/negative
+scene-graph spike passed on Windows using `@react-three/test-renderer`. Constitution v1.1.0 and
+FR-026 require tests to observe rendered values and fail when rendering ignores valid configuration.
+Keep the tested scene-graph assertion (never substitute a props-only assertion) and verify the full
+suite on Codio as part of target acceptance.
 
-**R2 — the course sandbox has 1.0 GB RAM with ~305 MB free.** This was not known when the plan was
-first written, and it invalidates an assumption in it. The Rollup production build is the process
-most likely to be OOM-killed, which FR-043 now requires not to happen. Three mitigations exist and
-Phase 0 must determine which apply: a `NODE_OPTIONS=--max-old-space-size` ceiling tuned down rather
-than up, `--minify` or esbuild minification, and reducing dev-only dependencies. If the build cannot
-be made to fit, that is a constraint on the toolchain and must be escalated rather than worked around
-by shipping an unverified build.
+**R2 — the Codio Node/npm runtime is unverified.** Registry metadata confirms Vite 8.3.1 and
+Vitest 5.0.3 require Node >=22.12.0 (or supported later major versions). The local Node 24.14.1/npm
+11.11.0 fixture passed; Codio must be checked for the pinned or compatible runtime before target
+acceptance.
 
-**R3 — TypeScript 7 is the native port, not a drop-in for the 5.x line.** The registry reports 7.0.2 as
-current. Do not adopt it mid-course on a teaching artifact; the ecosystem surface for it is thinner
-and students will hit friction unrelated to the lesson. Pin TypeScript 5.x explicitly.
+**R3 — production build memory is unmeasured in Codio.** A local Windows build passed, but it does not
+predict Codio resource use. The course sandbox has 1.0 GB RAM with ~305 MB free. The Rollup
+production build is the process most likely to be OOM-killed, which FR-043 requires not to happen.
+Measure a temporary fixture under `/usr/bin/time -v` and determine whether a tuned-down
+`NODE_OPTIONS=--max-old-space-size` ceiling, esbuild minification, or fewer dev-only dependencies are
+needed before claiming Codio memory acceptance. If the build cannot fit, resolve the constraint
+rather than report the target as verified.
+
+TypeScript remains on the established 5.x line (5.9.3 in the registry snapshot). Although npm
+reports 7.0.2 as current, do not adopt it mid-course on a teaching artifact; the ecosystem surface
+for it is thinner and students will hit friction unrelated to the lesson.
 
 **R4 — Vercel preview and production URLs differ, so "identical build output" must be read as
 identical *content from an identical commit*, not identical URL.** FR-030 and FR-042 are satisfied by
@@ -154,7 +161,7 @@ one. Cover it in the quickstart and in the first exercise brief, not just the sp
 specs/001-exhibition-viewer/
 ├── spec.md              # the specification
 ├── plan.md              # this file
-├── research.md          # Phase 0 output — R1 and R2 spike results, peer-compat matrix
+├── research.md          # Phase 0 evidence, decisions, and explicitly pending Codio spikes
 ├── quickstart.md        # student-facing setup and the shared-branch warning
 └── tasks.md             # Phase 2 output, from /speckit.tasks
 ```
@@ -176,7 +183,8 @@ src/
 ├── config/
 │   └── exhibition.ts        # THE ONLY authoring surface. Types + the starter exhibition.
 ├── navigation/
-│   └── cameraTarget.ts      # pure viewpoint math; no React, no three imports
+│   ├── cameraTarget.ts      # pure viewpoint math; no React, no three imports
+│   └── galleryKeys.ts       # pure arrow-key to station navigation; no React, no Three.js imports
 ├── surfaces/
 │   └── generateSurface.ts   # Canvas 2D procedural finish; pure function returning a texture
 ├── scene/
@@ -191,11 +199,18 @@ src/
 tests/
 ├── unit/
 │   ├── cameraTarget.test.ts
-│   └── generateSurface.test.ts
+│   ├── exhibitionConfig.test.ts
+│   ├── fitAspectRatio.test.ts
+│   ├── galleryKeys.test.ts
+│   ├── generateSurface.test.ts
+│   └── textureMemory.test.ts
 └── component/
-    ├── Artwork.test.tsx     # mounts, asserts surface precedence and fallback
+    ├── Artwork.test.tsx     # mounts and asserts painting colour and frame
+    ├── ArtworkImage.test.tsx # asserts image fitting and colour fallback
+    ├── Wall.test.tsx        # asserts wall colour, finish and image precedence
     ├── WallLabel.test.tsx   # asserts 3D text carries the metadata
-    └── Exhibition.test.tsx  # asserts config reaches the render; breaks if rendering ignores it
+    ├── Exhibition.test.tsx  # asserts each station's wall config and layout reach the render
+    └── CameraRig.test.tsx   # asserts focus/overview target and reduced-motion duration
 
 vercel.json                  # branch mapping, if defaults are insufficient
 index.html
@@ -212,7 +227,7 @@ layering rather than a generic template: `config` cannot import from `scene` bec
 |---|---|---|---|
 | Development | Codio sandbox, working branch | file save | student |
 | Staging | `staging` branch | `git push` | student |
-| Production | `main` branch | instructor `git merge --ff-only` | instructor only |
+| Production | `main` branch | student PR request, then instructor `git merge --ff-only` | instructor only |
 
 Vercel deploys every branch as a preview and `main` as production, so the branch topology in the spec
 maps to the host with no build script and no manual deploy step. The fast-forward rule (FR-042) is
@@ -221,25 +236,23 @@ what keeps the two deployments built from one commit, which is what makes stagin
 
 ## Open Items
 
-**O1 — performance figures are unmeasured.** SC-009 now names the sandbox and requires Phase 0 to
-record the observed time, but the 60 fps overview target in this plan has no basis at all. Both are
-hypotheses until measured. Do not report either to students as a guarantee.
+**O1 — performance figures are unmeasured.** SC-009 requires recording the browser and client
+device when the working exhibition is measured in T027. The 60 fps
+overview target in this plan also has no measured basis. Do not report either as a guarantee.
 
-**O2 — the Codio sandbox Node version is unconfirmed** (R2). Blocking for pinning.
+**O2 — the Codio sandbox Node version is unconfirmed** (R2). Verify compatibility before claiming
+target-environment acceptance.
 
 **O3 — Vercel project and domain names are unassigned.** The plan does not invent them.
 
 **O4 — texture resolution is now specified at 512×512 by default** (FR-046) with a memory report
-(FR-047), but the figure was chosen from the arithmetic in R2 before anything was rendered. It is a
+(FR-047), but the figure was chosen from the arithmetic in R3 before anything was rendered. It is a
 defensible starting point, not a measured one.
 
 ## Next Phase
 
-**Re-run `/speckit.plan` to complete its own Phase 0**, which produces `research.md`. There is no
-`/speckit.research` command; that name does not exist in Spec Kit. Research is a phase inside
-`speckit.plan`, and the run that produced this file skipped it.
-
-Phase 0 is where the R1 and R2 spikes report. Their results are empirical findings about the toolchain
-and belong in `research.md` under the command's own format — Decision, Rationale, Alternatives
-considered. Nothing else in this plan is worth implementing until R1 reports whether component tests
-can distinguish "configuration honoured" from "configuration ignored".
+Phase 0 findings are recorded in `research.md` under Decision, Rationale, and Alternatives
+considered. Registry research, the local renderer spike, and a local production build are complete.
+Local implementation may proceed on the verified Windows toolchain. Codio runtime, preview-network,
+test-suite, and memory checks remain required before claiming the sandbox acceptance criteria
+(FR-043–FR-045) are met.

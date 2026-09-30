@@ -1,0 +1,45 @@
+:root {
+  color-scheme: light;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #d7d0c4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  cursor: grab;
+}
+
+body:active {
+  cursor: grabbing;
+}
+
+.exhibition-shell {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  background: #d7d0c4;
+}
+
+.exhibition-shell canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}

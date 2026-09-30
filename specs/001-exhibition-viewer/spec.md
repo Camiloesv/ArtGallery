@@ -1,11 +1,10 @@
 # Feature Specification: Exhibition Viewer
 
-**Feature Branch**: `001-exhibition-viewer` (nominal identifier; the spec was authored before the
-repository was initialized, so all work is currently committed on `main`)
+**Feature Branch**: `001-exhibition-viewer`
 
 **Created**: 2026-09-30
 
-**Status**: Clarified — ready for `/speckit.plan`
+**Status**: Clarified — implementation in progress
 
 **Input**: User description: "A 3D art gallery that teaches students by letting them restyle the exhibition — walls, wall finishes, and paintings — by editing code, verifying with tests, and shipping to production. No visual editor: the code is the interface."
 
@@ -30,6 +29,19 @@ wrongness surfaced only when the development environment was identified as a Cod
 - Q: How is concurrent student work isolated on a single shared repository? → C: All students submit to the same staging branch with no reset between submissions. A submission is therefore ephemeral, and the gallery served in staging is whichever submission arrived last. This is a deliberate teaching constraint: coordinating a pull before a push is part of the exercise.
 - Q: Which commit reaches production, and how does it get there? → A: Only a commit that passed in staging and that the instructor accepted, merged to main by fast-forward only, so that main and staging resolve to the same commit and staging remains an exact preview of production.
 
+### Session 2026-09-30, third round — local validation environment
+
+- Q: When Codio is unavailable during development, which local environment should be used for preliminary validation? → A: Use the available Windows environment without Linux VM or container emulation. Treat its test and resource measurements as local evidence only; they do not satisfy Linux/Codio acceptance criteria, which remain pending until verified in Codio.
+
+### Session 2026-09-30, fourth round — wall configuration and keyboard navigation
+
+- Q: Must each painting have its own independently configurable wall-panel colour and finish? → A: Yes. Each artwork has its own wall configuration, and every wall panel starts with a different colour.
+- Q: How should the arrow keys move through the gallery? → A: Left and right move between adjacent artworks; up returns to the overview.
+
+### Session 2026-09-30, fifth round — panorama presentation
+
+- Q: How should the title and arrow-key instructions appear? → A: As 3D signs in the gallery, visible in the overview and hidden while an artwork is focused, preserving the prohibition on 2D user interfaces.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - View the Exhibition (Priority: P1)
@@ -37,7 +49,9 @@ wrongness surfaced only when the development environment was identified as a Cod
 A visitor opens the gallery and sees a long wall holding a numbered row of framed paintings. Each
 painting sits on its own panel, and each panel shows a large number identifying the piece. The
 visitor can take in the whole exhibition at once and understand that it is a sequence of
-individual, independently editable works.
+individual, independently editable works. The overview also presents the neon title “C1 Art
+Gallery” and a 3D instruction sign explaining the arrow keys, against a black-to-grey fading
+background.
 
 **Why this priority**: Without a visible exhibition there is nothing to teach against. This is the
 baseline that every other story modifies.
@@ -54,6 +68,11 @@ visible without any interaction.
 3. **Given** the exhibition is rendered, **When** the visitor looks at the scene, **Then** a ground
    plane and even lighting are present so the paintings read as a gallery rather than floating
    objects.
+4. **Given** the overview is displayed, **When** the visitor looks around the gallery, **Then** the
+   neon title “C1 Art Gallery” and a 3D instruction sign explaining left/right artwork navigation
+   and up-to-return-to-overview are legible in the scene against a black-to-grey fading background.
+5. **Given** an artwork is in focus, **When** the visitor views it, **Then** the overview title and
+   arrow-key instruction sign are hidden.
 
 ---
 
@@ -62,6 +81,8 @@ visible without any interaction.
 A visitor clicks a painting in the exhibition. The viewpoint glides smoothly from the wide
 overview to a position directly in front of that painting, where the artwork and the wall around
 it fill the view. Clicking away from the paintings returns the viewpoint to the wide overview.
+The visitor can also move between artworks with the left and right arrow keys, and return to the
+overview with the up arrow.
 
 **Why this priority**: Focus is what turns a static row into a browsable exhibition, and it is the
 only interaction the visitor gets. It also makes each restyled wall legible.
@@ -79,6 +100,11 @@ empty space and verify the viewpoint returns to the overview.
    smooth, with no visible jump or snap.
 4. **Given** a painting is in focus, **When** the visitor clicks a different painting, **Then** the
    viewpoint moves to that painting instead.
+5. **Given** the gallery is open, **When** the visitor presses the left or right arrow key, **Then**
+   the viewpoint moves smoothly to the adjacent artwork; from the overview, right selects the first
+   and left selects the last artwork; at either end it stays on that end artwork.
+6. **Given** an artwork is in focus, **When** the visitor presses the up arrow key, **Then** the
+   viewpoint returns smoothly to the overview.
 
 ---
 
@@ -106,7 +132,9 @@ test suite, and confirm the rendered exhibition matches.
    painting's surface uses that colour.
 4. **Given** a painting is configured with a title, artist, and year, **When** its wall panel is
    viewed, **Then** the number, title, artist, and year are all legible on that panel.
-5. **Given** a student has restyled the exhibition, **When** they run the test suite, **Then** the
+5. **Given** a student changes one artwork's wall-panel colour, **When** the exhibition renders,
+   **Then** that panel changes colour and every other panel retains its configured colour.
+6. **Given** a student has restyled the exhibition, **When** they run the test suite, **Then** the
    tests confirm the configuration is valid and matches what is rendered.
 
 ---
@@ -168,8 +196,8 @@ accordingly with no rendering changes.
 - The visitor clicks the painting that is already in focus: the viewpoint stays where it is.
 - A painting count of one, or a very large count: the exhibition remains navigable and the
   numbering stays correct.
-- A configured position places two paintings at the same spot: the rendering remains stable and
-  does not produce an unusable view.
+- A configured position places two paintings at the same spot: configuration validation fails with
+  a clear duplicate-position error before the exhibition renders.
 - A configured image is missing, empty, or in a format the browser cannot decode: that painting
   falls back to its colour and the rest of the exhibition is unaffected.
 - A wall finish is configured that no generator recognises: the wall falls back to a plain matte
@@ -201,8 +229,9 @@ accordingly with no rendering changes.
 
 - **FR-005**: Each painting MUST be able to carry a title, an artist, a year, and a position
   number.
-- **FR-006**: Each wall panel MUST be able to carry a colour, a surface roughness value, and a named
-  surface finish.
+- **FR-006**: Each artwork MUST have its own wall-panel configuration carrying a colour, roughness
+  value, and named surface finish. Changing one wall configuration MUST NOT alter any other panel.
+  The starter exhibition MUST give every wall panel a different colour.
 - **FR-007**: Each painting's number, title, artist, and year MUST all be presented on its wall
   panel, as text belonging to the 3D scene. The exhibition MUST contain no 2D user interface of any
   kind, so descriptive information and labels live only inside the scene.
@@ -296,8 +325,9 @@ accordingly with no rendering changes.
   other student's push replaces it. The gallery shown in staging is whichever submission arrived
   last, which may belong to somebody else.
 - **FR-039**: Production MUST be deployed from the repository's main branch.
-- **FR-040**: Only the instructor MAY merge to main. A student MUST NOT be able to promote their own
-  submission to production.
+- **FR-040**: After completing the exercise, a student MUST request promotion by opening a pull
+  request from staging to main. The instructor reviews and performs the promotion. The course lesson explains
+  this workflow; configuring repository permissions is outside this feature.
 - **FR-041**: A merge to main MUST contain no exhibition edits beyond the accepted commit.
 - **FR-042**: Promotion to main MUST be a fast-forward, so that main and the staging branch resolve
   to the same commit. A merge commit MUST NOT be created, because it would leave production built
@@ -313,7 +343,11 @@ the dev server, the test runner, and the production build — and not the render
   being terminated for memory use.
 - **FR-044**: The test suite MUST run to completion on the course sandbox under the same
   constraint.
-- **FR-045**: The development server MUST start and serve the exhibition on the course sandbox.
+- **FR-045**: The development server MUST start and serve the exhibition on the course sandbox,
+  bind to `0.0.0.0`, use a port from 1024 through 9499 (5000 by default), and remain running while
+  the preview is in use. Codio exposes it at `https://${CODIO_HOSTNAME}-${PORT}.codio.io/`; the
+  hostname is supplied by Codio and MUST NOT be hard-coded. A workspace-specific URL may be shown
+  as an example only.
 - **FR-046**: Surface textures MUST be generated at a resolution held in the configuration, with a
   default of 512 by 512. The resolution MUST NOT be hard-coded in a component.
 - **FR-047**: The application MUST be able to report the total texture memory implied by the
@@ -326,15 +360,26 @@ the dev server, the test runner, and the production build — and not the render
   configuration file is the only authoring surface.
 - **FR-049**: The rendered exhibition MUST fill the available view at any window size.
 - **FR-050**: All user-facing text MUST be in English.
+- **FR-051**: The left and right arrow keys MUST move focus to the adjacent artwork with a continuous
+  transition. From the overview, right MUST focus the first artwork and left MUST focus the last.
+  At either end of the row, focus MUST remain on that end artwork. The up arrow MUST return to the
+  overview with a continuous transition.
+- **FR-052**: The overview MUST display the exact title “C1 Art Gallery” as neon-styled 3D text in
+  the scene. This title MUST be visible in the overview and hidden while an artwork is focused.
+- **FR-053**: The overview MUST display a legible 3D instruction sign that explains that left and
+  right arrows move between artworks and the up arrow returns to the overview. The sign MUST be
+  visible in the overview and hidden while an artwork is focused; it MUST NOT be a 2D overlay.
+- **FR-054**: The gallery background MUST fade between black and grey behind the exhibition,
+  keeping the paintings and their wall panels legible in the overview and focused views.
 
 ### Key Entities
 
 - **Exhibition**: The whole gallery. Holds an ordered collection of stations, plus layout values
   that determine their count and spacing.
-- **Station**: One painting plus the wall panel it hangs on. Carries a number, a title, an artist, a
-  year, a position, a wall definition, and a painting definition.
-- **Wall**: The surface behind a painting. Carries a colour, a roughness value, a named finish, and
-  an optional image.
+- **Station**: One painting plus its independently configured wall panel. Carries a number, a title,
+  an artist, a year, a position, its own wall definition, and its painting definition.
+- **Wall**: The surface behind one painting. Carries a distinct configured colour, a roughness value,
+  a named finish, and an optional image.
 - **Painting**: The framed surface in front of a wall. Carries a colour and an optional image.
 - **Surface Finish**: A named wall appearance that the rendering can produce. Carries a label and
   the properties that distinguish its appearance.
@@ -348,8 +393,9 @@ the dev server, the test runner, and the production build — and not the render
   individually numbered works within 15 seconds of the page finishing loading.
 - **SC-002**: A visitor can reach any specific painting by clicking it, in a single interaction,
   without any on-screen control panel or menu.
-- **SC-003**: A student can change a wall colour, a wall finish, and a painting colour, then see the
-  result on screen, by editing configuration only — with no rendering file touched.
+- **SC-003**: A student can change one artwork's wall colour and finish and its painting colour,
+  then see those changes without changing any other wall, by editing configuration only — with no
+  rendering file touched.
 - **SC-004**: A student can increase the number of paintings in the exhibition and see the correct
   new count, with correct contiguous numbering and even spacing, by editing configuration only.
 - **SC-005**: A student can add a brand new wall finish and apply it to a wall, without editing any
@@ -362,10 +408,9 @@ the dev server, the test runner, and the production build — and not the render
   the suite to pass again, and deliberately breaking the rendering so it ignores a valid
   configuration also causes the suite to fail.
 - **SC-009**: The exhibition becomes interactive and fully navigable within 3 seconds of the load
-  event completing, measured on the course sandbox: Ubuntu 22.04.3 LTS, 8 cores, 1.0 GB RAM, of which
-  roughly 305 MB is free. Phase 0 MUST record the observed value in the repository. If the observed
-  value exceeds 3 seconds, the target MUST be revised in this spec before implementation continues,
-  rather than the number being left to fail silently on student hardware.
+  event completing. Measure this once the working exhibition exists, recording the browser and client
+  device used; the Codio sandbox hosts the dev server but does not run the visitor's browser. If the
+  observed value exceeds 3 seconds, revise the target in this spec before calling the story done.
 - **SC-010**: Viewpoint transitions contain no visible snapping or teleport; the viewpoint moves
   continuously from overview to any painting.
 - **SC-011**: A missing or undecodable image causes at most that one painting to fall back to its
@@ -383,8 +428,9 @@ the dev server, the test runner, and the production build — and not the render
 - **SC-017**: After a different student pushes, the gallery served in staging becomes that other
   student's exhibition, and the first submission is no longer served. The students already know
   this, because the exercise states it; it is not a surprise discovered mid-task.
-- **SC-018**: A student without permission on the main branch cannot promote their own submission to
-  production by any means available to them.
+- **SC-018**: The course lesson instructs students to request promotion through a pull request to
+  main after completing the exercise, and the documented release procedure assigns acceptance and
+  promotion to the instructor. Repository permission enforcement is outside this feature.
 - **SC-019**: After an accepted submission is promoted, the commit deployed to production and the
   commit serving staging are the same commit, not merely the same content.
 - **SC-020**: The production build completes and the test suite runs to completion on the course
@@ -392,6 +438,11 @@ the dev server, the test runner, and the production build — and not the render
 - **SC-021**: Raising the configured painting count or the texture resolution produces a reported
   texture-memory figure, so the cost of the change is visible in the configuration rather than
   discovered as an unresponsive scene.
+- **SC-022**: A visitor can move between adjacent artworks with the left and right arrow keys and
+  return to the overview with the up arrow; boundary navigation never wraps to the opposite end.
+- **SC-023**: In the overview, a visitor can read “C1 Art Gallery” and the arrow-key instruction
+  sign in the 3D scene against the black-to-grey fading background. Both signs are hidden in the
+  focused-artwork view, where the same background remains behind the artwork; no 2D overlay is used.
 
 ## Assumptions
 
@@ -406,6 +457,9 @@ the dev server, the test runner, and the production build — and not the render
 - The development sandbox runs Linux, which is the platform the exercise is authored and verified
   against. The instructor's acceptance of a change is the gate between staging and production, and
   it carries no exhibition edits.
+- A Windows workstation without Linux emulation may be used for preliminary authoring and checks
+  when Codio is unavailable, but Windows results do not establish Linux/Codio compatibility or
+  sandbox memory compliance.
 - The exhibition ships with flat colours as placeholder content. Real imagery is a student exercise,
   so the repository carries no binary image assets at launch.
 - A single exhibition is in scope. Multiple exhibitions, exhibitions loaded at runtime, or
@@ -446,3 +500,5 @@ decision rather than an omission.
 - **Optimised mobile and tablet layout.** The exhibition must remain visible at any window size, but
   touch-first layout is not a goal.
 - **Analytics, telemetry, and usage tracking.**
+- **Repository permission configuration and the course lesson.** The lesson tells students to open
+  a pull request to main after completing the exercise; the instructor handles promotion.
