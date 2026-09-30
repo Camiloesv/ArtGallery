@@ -303,12 +303,29 @@ accordingly with no rendering changes.
   to the same commit. A merge commit MUST NOT be created, because it would leave production built
   from a commit that staging never served and would break the guarantee in FR-030.
 
+**Course sandbox constraints**
+
+The development sandbox is Ubuntu 22.04.3 LTS with 8 cores and 1.0 GB RAM, of which roughly 305 MB
+is free. The browser runs on the student's own machine, so the sandbox budget covers the toolchain —
+the dev server, the test runner, and the production build — and not the rendered scene.
+
+- **FR-043**: The production build MUST complete on the course sandbox without the build process
+  being terminated for memory use.
+- **FR-044**: The test suite MUST run to completion on the course sandbox under the same
+  constraint.
+- **FR-045**: The development server MUST start and serve the exhibition on the course sandbox.
+- **FR-046**: Surface textures MUST be generated at a resolution held in the configuration, with a
+  default of 512 by 512. The resolution MUST NOT be hard-coded in a component.
+- **FR-047**: The application MUST be able to report the total texture memory implied by the
+  configured painting count and texture resolution, so that a student raising either value can see
+  what it costs before the scene becomes unusable.
+
 **Presentation constraints**
 
-- **FR-043**: The system MUST NOT provide any visual interface for editing the exhibition. The
+- **FR-048**: The system MUST NOT provide any visual interface for editing the exhibition. The
   configuration file is the only authoring surface.
-- **FR-044**: The rendered exhibition MUST fill the available view at any window size.
-- **FR-045**: All user-facing text MUST be in English.
+- **FR-049**: The rendered exhibition MUST fill the available view at any window size.
+- **FR-050**: All user-facing text MUST be in English.
 
 ### Key Entities
 
@@ -344,8 +361,11 @@ accordingly with no rendering changes.
 - **SC-008**: A deliberately broken configuration causes the test suite to fail, fixing it causes
   the suite to pass again, and deliberately breaking the rendering so it ignores a valid
   configuration also causes the suite to fail.
-- **SC-009**: The exhibition becomes interactive and fully navigable within 3 seconds of the page
-  finishing loading on a typical student laptop.
+- **SC-009**: The exhibition becomes interactive and fully navigable within 3 seconds of the load
+  event completing, measured on the course sandbox: Ubuntu 22.04.3 LTS, 8 cores, 1.0 GB RAM, of which
+  roughly 305 MB is free. Phase 0 MUST record the observed value in the repository. If the observed
+  value exceeds 3 seconds, the target MUST be revised in this spec before implementation continues,
+  rather than the number being left to fail silently on student hardware.
 - **SC-010**: Viewpoint transitions contain no visible snapping or teleport; the viewpoint moves
   continuously from overview to any painting.
 - **SC-011**: A missing or undecodable image causes at most that one painting to fall back to its
@@ -367,6 +387,11 @@ accordingly with no rendering changes.
   production by any means available to them.
 - **SC-019**: After an accepted submission is promoted, the commit deployed to production and the
   commit serving staging are the same commit, not merely the same content.
+- **SC-020**: The production build completes and the test suite runs to completion on the course
+  sandbox, with neither process killed for memory use.
+- **SC-021**: Raising the configured painting count or the texture resolution produces a reported
+  texture-memory figure, so the cost of the change is visible in the configuration rather than
+  discovered as an unresponsive scene.
 
 ## Assumptions
 

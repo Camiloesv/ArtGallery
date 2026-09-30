@@ -66,8 +66,22 @@ scripts. Client-side WebGL 2, no SSR. Deployed as a static build to Vercel.
 **Project Type**: single-page client-only web application. No API, no second deployable.
 
 **Performance Goals**: 60 fps while orbiting the overview, at the configured painting count. Scene
-interactive within 3 seconds of the load event completing (SC-009, baseline hardware still unconfirmed
-— see open item O1).
+interactive within 3 seconds of the load event completing (SC-009). **Both figures are provisional.**
+The 60 fps target was written before the course sandbox was known and is now treated as a hypothesis
+to be measured, not a commitment. The sandbox has 8 cores but 1.0 GB RAM with only ~305 MB free, and
+the frame rate depends on the student's own machine and GPU, which this plan cannot see.
+
+**Sandbox budget**: the development sandbox is Ubuntu 22.04.3 LTS, 8 cores, 1.0 GB RAM, roughly
+305 MB free, user `codio`, working directory `/home/codio/workspace`. The browser runs on the
+student's machine, not in the sandbox, so the budget covers the toolchain only:
+
+| Process | Sandbox cost | Risk |
+|---|---|---|
+| Vite dev server | ~250–400 MB | tight but workable |
+| Vitest + `@react-three/test-renderer` | ~200–400 MB | tight, and R1 must run here |
+| Rollup production build | peaks 500 MB+ | **most likely to be OOM-killed** |
+
+Disk is not a constraint at 4.3 GB free, so `node_modules` at a few hundred megabytes is fine.
 
 **Constraints**: no state-management library (React built-ins only, Principle I); no SSR; no runtime
 dependency on third-party asset services; procedural Canvas 2D surfaces; all user-facing strings,
@@ -110,9 +124,13 @@ written. **Spike this in Phase 0 before writing any other test.** If it fails, e
 component structure must expose a testable seam, or FR-026 has to be renegotiated. Do not paper over
 it by asserting on props.
 
-**R2 — the Codio sandbox Node version is unknown.** Every version in the table above is current on a
-Windows machine running Node 24. The sandbox may ship an older Node that Vite 8 or Vitest 5 will not
-support. Confirm during Phase 0 and pin with `.nvmrc` plus an `engines` field.
+**R2 — the course sandbox has 1.0 GB RAM with ~305 MB free.** This was not known when the plan was
+first written, and it invalidates an assumption in it. The Rollup production build is the process
+most likely to be OOM-killed, which FR-043 now requires not to happen. Three mitigations exist and
+Phase 0 must determine which apply: a `NODE_OPTIONS=--max-old-space-size` ceiling tuned down rather
+than up, `--minify` or esbuild minification, and reducing dev-only dependencies. If the build cannot
+be made to fit, that is a constraint on the toolchain and must be escalated rather than worked around
+by shipping an unverified build.
 
 **R3 — TypeScript 7 is the native port, not a drop-in for the 5.x line.** The registry reports 7.0.2 as
 current. Do not adopt it mid-course on a teaching artifact; the ecosystem surface for it is thinner
@@ -195,14 +213,17 @@ what keeps the two deployments built from one commit, which is what makes stagin
 
 ## Open Items
 
-**O1 — SC-009 names no hardware.** "Typical student laptop" is the only success criterion in the spec
-that cannot be verified. The plan assumes a 2019-class integrated-graphics laptop for the 3-second
-budget. This is an assumption, not a measurement, and the instructor should replace it with the
-actual course hardware before `/speckit.tasks`.
+**O1 — performance figures are unmeasured.** SC-009 now names the sandbox and requires Phase 0 to
+record the observed time, but the 60 fps overview target in this plan has no basis at all. Both are
+hypotheses until measured. Do not report either to students as a guarantee.
 
 **O2 — the Codio sandbox Node version is unconfirmed** (R2). Blocking for pinning.
 
 **O3 — Vercel project and domain names are unassigned.** The plan does not invent them.
+
+**O4 — texture resolution is now specified at 512×512 by default** (FR-046) with a memory report
+(FR-047), but the figure was chosen from the arithmetic in R2 before anything was rendered. It is a
+defensible starting point, not a measured one.
 
 ## Next Phase
 
