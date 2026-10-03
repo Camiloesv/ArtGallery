@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useThree } from '@react-three/fiber';
 import { generateGalleryBackdrop, generateSurface } from '../surfaces/generateSurface';
 import { generateGallerySignTexture } from '../surfaces/generateLabelTexture';
 import { validateExhibition, type ExhibitionConfig } from '../config/exhibition';
@@ -6,21 +7,29 @@ import { Artwork } from './Artwork';
 import { Wall } from './Wall';
 import { WallLabel } from './WallLabel';
 import { MemoryPlaque } from './MemoryPlaque';
+import { OverviewPanSurface } from './OverviewPanSurface';
 
 type ExhibitionProps = {
   config: ExhibitionConfig;
   focusedPosition?: number | null;
+  overviewOffset?: number;
+  onOverviewOffsetChange?: (offset: number) => void;
   onSelect: (position: number) => void;
 };
 
 const GALLERY_TITLE = 'C1 Art Gallery';
 const ARROW_INSTRUCTIONS = '← / → Browse artworks   ↑ Return to overview';
+const SIGN_PIVOT_HEIGHT = 7.4;
 
 export function Exhibition({
   config,
   focusedPosition = null,
+  overviewOffset = 0,
+  onOverviewOffsetChange = () => undefined,
   onSelect,
 }: ExhibitionProps) {
+  const viewportWidth = useThree((state) => state.viewport.width);
+  const signScale = Math.min(1, (viewportWidth * 0.92) / 17.6);
   validateExhibition(config);
   const stations = config.stations.slice(0, config.count);
   const wallTextures = useMemo(
@@ -45,12 +54,24 @@ export function Exhibition({
 
   return (
     <group name="exhibition">
+      {focusedPosition === null && (
+        <OverviewPanSurface
+          count={config.count}
+          currentOffset={overviewOffset}
+          onOffsetChange={onOverviewOffsetChange}
+          spacing={config.spacing}
+        />
+      )}
       <mesh name="gallery-backdrop" position={[0, 3.8, -16]} renderOrder={-1}>
         <planeGeometry args={[160, 80]} />
         <meshBasicMaterial map={backdropTexture} toneMapped={false} />
       </mesh>
       {focusedPosition === null && (
-        <group name="overview-signs">
+        <group
+          name="overview-signs"
+          position={[overviewOffset, SIGN_PIVOT_HEIGHT * (1 - signScale), 0]}
+          scale={[signScale, signScale, 1]}
+        >
           <mesh
             name="gallery-title"
             position={[0, 8.4, -0.2]}

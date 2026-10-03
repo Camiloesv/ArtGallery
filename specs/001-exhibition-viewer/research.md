@@ -6,6 +6,45 @@
 
 This report separates registry evidence gathered from this workstation from runtime spikes that require the course Codio sandbox. A Windows workstation or an unavailable WSL distribution is not a substitute for that Linux environment.
 
+## R4 — Cloudflare deployment product and branch previews (2026-10-02)
+
+**Decision**: Use Cloudflare Pages for the existing static Vite application. Configure `main` as its
+production branch and allow only `staging` as a preview branch. Keep the existing fast-forward rule
+as the promotion control so production and staging point to the same accepted commit.
+
+**Rationale**: The project builds static assets to `dist/` and has no Worker/API behavior. Cloudflare's
+Pages documentation describes a Vite build using `npm run build` and `dist`, Git-connected automatic
+deployment, a production branch, and configurable preview branch inclusion/exclusion. That directly
+maps the current repository branch contract without adding a server runtime or deployment package.
+Cloudflare currently positions Workers as its primary platform and recommends Workers for new
+projects generally. Workers Builds can also deploy a Vite SPA and create previews for non-production
+branches, but its Wrangler/Worker configuration is extra surface for this static-only app. Pages is
+selected for the narrower fit; revisit if a verified Pages limitation prevents the required staging
+preview behavior.
+
+**Alternatives considered**:
+
+- Workers with Static Assets and Workers Builds (not selected: broader platform, but no server logic
+  is needed and branch previews are already available through Pages).
+- A GitHub Actions deployment to Cloudflare (not selected: Pages Git integration supports the
+  required branch builds without a separate workflow or deployment credentials in repository
+  configuration).
+- Keep Vercel (rejected: the clarified spec explicitly requires Cloudflare).
+
+**Branch mapping**:
+
+| Repository branch | Cloudflare Pages environment | Trigger |
+|---|---|---|
+| `staging` | Preview deployment | Push to the shared staging branch |
+| `main` | Production deployment | Instructor fast-forward promotion after acceptance |
+| Other branches | No deployment | Excluded by preview branch controls |
+
+**Target verification still required**: Connect the actual repository in the user's Cloudflare
+account, set `main` as the production branch, include `staging` and exclude other preview branches,
+then verify a staging push and accepted fast-forward promotion. Project name, account, domains, and
+credentials are deliberately not invented. A Windows/local build or a dashboard setting alone does
+not prove an end-to-end deployment or same-commit result.
+
 ## R1 — Can component tests prove configuration reaches the rendered scene?
 
 **Decision**: Keep `@react-three/test-renderer` as the candidate renderer. The positive and negative scene-graph fixture passed on Windows, so local implementation may use this strategy; Linux/Codio execution remains a target-environment verification item.
@@ -59,8 +98,9 @@ This report separates registry evidence gathered from this workstation from runt
 - R1's scene-graph positive/negative control **passed on Windows**; its Linux/Codio execution remains unverified and must be reported as such.
 - R2's local toolchain install and build **passed** on Node 24.14.1/npm 11.11.0; actual Codio runtime compatibility remains pending.
 - R3's local Vite production build **passed**, but Codio peak RSS remains pending and must be verified before claiming FR-043/FR-044 resource compliance.
+- R4 selects Cloudflare Pages based on its documented static Vite build and branch-preview controls; actual Git integration, branch settings, and deployed commit parity remain unverified until configured in the project owner's account.
 - SC-009 remains a later browser measurement after the working exhibition exists; it is not a Phase 0 result.
-- Plan/task naming must consistently reserve R1 for renderer observability, R2 for toolchain/runtime compatibility, and R3 for build memory.
+- Plan/task naming must consistently reserve R1 for renderer observability, R2 for toolchain/runtime compatibility, R3 for build memory, and R4 for Cloudflare deployment choice.
 
 ## Local implementation evidence — overview presentation (2026-09-30)
 
@@ -71,8 +111,22 @@ This report separates registry evidence gathered from this workstation from runt
 - The production build still emits Vite's existing large-chunk warning (1,125.31 kB minified JavaScript). This local build is not Codio memory evidence.
 - The local dev server returned HTTP 200 on `localhost:5173`. The in-app browser policy denied navigation for visual inspection, so no visual pass is claimed. Codio and browser verification remain pending.
 
+## Local implementation evidence — responsive exhibition navigation (2026-10-02)
+
+- Added the 25th configured station and verified all 25 starter walls have unique shades whose RGB channels are at least 224. Starter walls use the light plaster finish so their configured white differences remain visible in the scene.
+- Replaced the fit-the-whole-row overview with a closer target and horizontally bounded pointer pan. The overview signs follow the visible section and scale around their own visual centre on narrow viewports.
+- Added a navigation-only selector listing the configured stations; browser review selected Painting 25 and confirmed the camera focused it, then returned to Overview.
+- Added mounted scene coverage for drag-sized clicks, narrow viewport sign scaling, and sign positioning. Pointer dragging in an emulated 390 × 844 viewport moved the row while the selector remained at Overview. This is pointer-drag validation in an emulated phone viewport, not physical touch-device validation.
+- Browser visual review: Codex in-app Chromium, 1280 × 720 default, plus emulated 768 × 1024 tablet and 390 × 844 phone viewport sizes. The overview showed the title, arrow instructions, responsive selector, and fewer than 25 paintings; the phone selector sits in the lower safe-area region. Selecting Painting 25 focused the matching artwork.
+- `npm test`, `npm run typecheck`, `npm run lint`, `npm run format:check`, and `npm run build` pass locally. The build still reports the large JavaScript chunk warning (1,127.10 kB minified). Runtime compatibility and memory on the Linux/Codio course sandbox remain unverified.
+- Cloudflare Pages configuration is documented and `vercel.json` is removed. The Cloudflare account's Git integration, branch settings, preview URL, and production/staging commit identity are unverified because this checkout has no Cloudflare dashboard session or project credentials.
+
 ## Sources
 
 - npm registry metadata for the exact package manifests, queried 2026-09-30: `https://registry.npmjs.org/<package>/<version>` for each table entry. Metadata inspected: `dist-tags`, `engines`, and `peerDependencies`.
 - `@react-three/test-renderer` npm package documentation: https://www.npmjs.com/package/%40react-three/test-renderer (describes Node scene-graph snapshots without WebGL/browser; does not replace the required negative-control spike).
 - Repository constraints: `.specify/memory/constitution.md`, `specs/001-exhibition-viewer/spec.md`, and `specs/001-exhibition-viewer/plan.md`.
+- Cloudflare Pages [Vite build guide](https://developers.cloudflare.com/pages/framework-guides/deploy-a-vite3-project/) (build command/output, Git deployments, branch previews; documentation last updated 2026-04-21).
+- Cloudflare Pages [branch deployment controls](https://developers.cloudflare.com/pages/configuration/branch-build-controls/) (production branch and include/exclude preview branch rules; last updated 2026-04-21).
+- Cloudflare [Pages framework guide index](https://developers.cloudflare.com/pages/framework-guides/) (current recommendation that Workers is the primary platform for new projects; last updated 2026-08-21).
+- Cloudflare Workers [Vite plugin overview](https://developers.cloudflare.com/workers/vite-plugin/) and [static assets](https://developers.cloudflare.com/workers/static-assets/) (verified Workers is a viable static SPA alternative; last updated 2026-09-30 and 2026-07-03).

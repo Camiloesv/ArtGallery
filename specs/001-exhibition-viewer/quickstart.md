@@ -25,13 +25,21 @@ Edit only `src/config/exhibition.ts`:
 - Each station carries its title, artist, year, position, painting color, optional image path and
   aspect ratio, plus its own wall configuration.
 - Each station's wall carries its distinct color, roughness, finish, and optional image path and
-  aspect ratio. Changing a wall cannot change another station's wall.
+  aspect ratio. The 25 starter walls each use a different shade of white. Changing one wall cannot
+  change another station's wall.
 - Four local wall finishes are available: plaster, concrete, limewash, and slate. An unknown name
   falls back to matte plaster.
 
+Use the visible numbered selector to jump to a configured painting. Its options show only the
+numbers from 1 through the configured count (1 through 25 in the starter exhibition), and change to
+follow the count if the configuration is edited. Use the separate **Overview** button or the up
+arrow to return to the panorama. The selector navigates only; it does not edit exhibition data.
+
 Use the left and right arrow keys to move between artworks; from the overview, right opens the first
 artwork and left opens the last. Focus remains on the first or last artwork at each row boundary.
-Press up to return to the overview.
+Press up to return to the closer overview. Drag horizontally with a mouse or swipe on a touch screen
+to explore the rest of the row; a pan gesture must not select a painting accidentally. Tap a visible
+painting to focus it.
 
 The overview includes the neon “C1 Art Gallery” title, a 3D sign for the arrow keys, and a radial
 black-to-grey fade behind the exhibition. Both signs disappear while an artwork is focused.
@@ -51,7 +59,7 @@ npm run lint
 npm run build
 ```
 
-## Shared staging and instructor promotion
+## Cloudflare Pages staging and instructor promotion
 
 All students submit to the shared `staging` branch. Pull the latest branch before starting or pushing;
 another student's push replaces the exhibition currently shown in staging. A submission is ephemeral
@@ -63,6 +71,9 @@ staging, then fast-forward `main` to that commit. If another submission has chan
 the new head and repeat staging validation before promotion. Do not create a merge commit: production
 and staging must resolve to the same commit.
 
-`vercel.json` enables automatic deployments for `staging` and `main`, while disabling other branches.
-The Vercel project must still select `main` as its Production Branch in Settings → Environments; confirm
-that setting and a sample deployment in the hosting dashboard before calling the chain verified.
+Configure the Cloudflare Pages project with `main` as the Production branch and custom preview branch
+rules that include `staging` and exclude other branches. Use `npm run build` as the build command and
+`dist` as the output directory. Confirm in the Cloudflare dashboard that a staging push updates the
+preview deployment and that an accepted fast-forward to `main` updates production to the same commit.
+The project name, account, domains, and credentials are supplied by the project owner; do not guess
+them. Local build success does not verify the hosted deployments.

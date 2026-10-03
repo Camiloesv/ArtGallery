@@ -5,6 +5,7 @@ import { getCameraTarget } from '../navigation/cameraTarget';
 type CameraRigProps = {
   count: number;
   focusedPosition?: number | null;
+  overviewOffset?: number;
   reducedMotion?: boolean;
   spacing?: number;
   onOverviewClick?: () => void;
@@ -20,6 +21,7 @@ const REDUCED_TRANSITION_SECONDS = 0.32;
 export function CameraRig({
   count,
   focusedPosition = null,
+  overviewOffset = 0,
   reducedMotion = false,
   spacing = STATION_SPACING,
   onOverviewClick,
@@ -40,14 +42,14 @@ export function CameraRig({
           spacing,
         }));
   const overview = getOverviewTarget(
-    count,
-    spacing,
-    size.width,
     size.height,
     (camera as PerspectiveCamera).fov,
+    overviewOffset,
   );
   const destination: [number, number, number] = target ? target.position : overview;
-  const lookTarget = new Vector3(...(target?.lookAt ?? [0, WALL_CENTER_HEIGHT, 0]));
+  const lookTarget = new Vector3(
+    ...(target?.lookAt ?? [overviewOffset, WALL_CENTER_HEIGHT + 2.25, 0]),
+  );
   const transitionDuration = reducedMotion
     ? REDUCED_TRANSITION_SECONDS
     : NORMAL_TRANSITION_SECONDS;
@@ -87,6 +89,7 @@ export function CameraRig({
       name="camera-rig"
       userData={{
         focusedPosition,
+        overviewOffset,
         targetKind: target ? 'focused' : 'overview',
         targetPosition: destination,
         transitionDuration,
@@ -100,18 +103,13 @@ export function CameraRig({
 }
 
 function getOverviewTarget(
-  count: number,
-  spacing: number,
-  width: number,
   height: number,
   fov: number,
+  overviewOffset: number,
 ): [number, number, number] {
-  const aspect = Math.max(width / Math.max(height, 1), 0.45);
   const halfFov = MathUtils.degToRad(fov) / 2;
-  const exhibitionWidth = count * spacing;
-  const horizontalDistance = exhibitionWidth / (2 * Math.tan(halfFov) * aspect);
   const verticalDistance = WALL_HEIGHT / (2 * Math.tan(halfFov));
-  const distance = Math.max(horizontalDistance, verticalDistance) * 1.1;
-  // Keep the complete row visible while leaving calm space above the wall.
-  return [0, WALL_CENTER_HEIGHT + 3, distance];
+  // Frame a legible section of the wall; horizontal panning exposes the rest of the row.
+  const distance = Math.max(verticalDistance * 2.1, height > 0 ? 15 : 0);
+  return [overviewOffset, WALL_CENTER_HEIGHT + 4.75, distance];
 }

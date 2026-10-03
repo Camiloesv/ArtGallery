@@ -26,4 +26,22 @@ describe('CameraRig', () => {
     expect(rig.instance.userData.targetKind).toBe('overview');
     expect(rig.instance.userData.targetPosition[0]).toBe(0);
   });
+
+  it('keeps the overview close and follows a horizontal pan offset', async () => {
+    const renderer = await ReactThreeTestRenderer.create(
+      <CameraRig count={25} focusedPosition={null} overviewOffset={0} />,
+    );
+    const rig = renderer.scene.findByProps({ name: 'camera-rig' });
+    const initialDistance = rig.instance.userData.targetPosition[2];
+
+    expect(initialDistance).toBeLessThan(20);
+    expect(initialDistance).toBeGreaterThan(0);
+    expect(rig.instance.userData.targetPosition[1]).toBeGreaterThan(6.5);
+
+    await renderer.update(
+      <CameraRig count={25} focusedPosition={null} overviewOffset={7} />,
+    );
+    expect(rig.instance.userData.targetPosition[0]).toBe(7);
+    expect(rig.instance.userData.targetPosition[2]).toBe(initialDistance);
+  });
 });

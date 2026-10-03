@@ -13,7 +13,7 @@
 ### Session 2026-09-30
 
 - Q: Should the test suite verify that rendering honours the configuration, or only that the configuration is valid? → A: Component tests that mount the components and assert the rendered result carries the configured values.
-- Q: Where is a focused painting's title, artist, and year presented to the visitor? → B: Rendered as text on the wall panel itself, beside the number, so the project contains no 2D user interface at all.
+- Q: Where is a focused painting's title, artist, and year presented to the visitor? → B: Rendered as text on the wall panel itself, beside the number. Descriptive labels remain in the 3D scene; the numbered navigation selector is the sole 2D interface exception.
 - Q: If a wall declares both a named finish and an image, which one is drawn? → A: The image wins and the named finish acts as the fallback, giving a two-level precedence rule.
 - Q: How does the viewpoint behave when the visitor prefers reduced motion? → B: The transition still runs and remains continuous, but completes in a small fraction of the normal duration. No exemption to FR-011 is needed.
 - Q: Is shipping to production part of this feature, and what differs between development, staging, and production? → A: Yes, the feature ships through a dev → staging → production chain, and all three run identical configuration and identical content. Staging is an exact preview of production, and the configuration file contains no environment-conditional values.
@@ -42,27 +42,32 @@ wrongness surfaced only when the development environment was identified as a Cod
 
 - Q: How should the title and arrow-key instructions appear? → A: As 3D signs in the gallery, visible in the overview and hidden while an artwork is focused, preserving the prohibition on 2D user interfaces.
 
+### Session 2026-10-02 — mobile navigation and deployment
+
+- Q: How should visitors jump directly to a numbered painting from 1 to 25? → A: Provide a visible, touch-friendly navigation selector and include 25 paintings in the starter exhibition.
+- Q: Should the panorama show all 25 paintings at once, or use a closer frame and let visitors traverse the row horizontally? → A: Use a closer frame showing fewer works at once, with horizontal swipe or drag to explore the full row.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - View the Exhibition (Priority: P1)
 
-A visitor opens the gallery and sees a long wall holding a numbered row of framed paintings. Each
-painting sits on its own panel, and each panel shows a large number identifying the piece. The
-visitor can take in the whole exhibition at once and understand that it is a sequence of
-individual, independently editable works. The overview also presents the neon title “C1 Art
+A visitor opens the gallery and sees a nearby section of a long wall holding a numbered row of 25
+framed paintings. Each painting sits on its own panel, and each panel shows a large number
+identifying the piece. The visitor can explore the full row by moving the panorama horizontally,
+and the numbered selector exposes all 25 works. The overview also presents the neon title “C1 Art
 Gallery” and a 3D instruction sign explaining the arrow keys, against a black-to-grey fading
 background.
 
 **Why this priority**: Without a visible exhibition there is nothing to teach against. This is the
 baseline that every other story modifies.
 
-**Independent Test**: Load the page and confirm a row of at least 24 numbered, framed paintings is
-visible without any interaction.
+**Independent Test**: Load the page, confirm the closer panorama frames a nearby section of the
+row, and verify that horizontal movement and the numbered selector reach all 25 paintings.
 
 **Acceptance Scenarios**:
 
-1. **Given** a fresh page load, **When** the exhibition renders, **Then** a row of at least 24
-   framed paintings is visible, each on its own panel.
+1. **Given** a fresh page load, **When** the exhibition renders, **Then** a closer panorama frames
+   a nearby section of the 25-work row, and the remaining works are reachable by moving horizontally.
 2. **Given** the exhibition is rendered, **When** the visitor looks at any panel, **Then** that
    panel displays the number of the piece it holds.
 3. **Given** the exhibition is rendered, **When** the visitor looks at the scene, **Then** a ground
@@ -73,16 +78,20 @@ visible without any interaction.
    and up-to-return-to-overview are legible in the scene against a black-to-grey fading background.
 5. **Given** an artwork is in focus, **When** the visitor views it, **Then** the overview title and
    arrow-key instruction sign are hidden.
+6. **Given** the panorama is open, **When** the visitor drags or swipes horizontally, **Then** the
+   panorama moves along the row so the visitor can inspect works beyond the current view.
 
 ---
 
 ### User Story 2 - Approach a Painting (Priority: P2)
 
-A visitor clicks a painting in the exhibition. The viewpoint glides smoothly from the wide
-overview to a position directly in front of that painting, where the artwork and the wall around
-it fill the view. Clicking away from the paintings returns the viewpoint to the wide overview.
-The visitor can also move between artworks with the left and right arrow keys, and return to the
-overview with the up arrow.
+A visitor clicks or taps a visible painting in the exhibition. The viewpoint glides smoothly from
+the close overview to a position directly in front of that painting, where the artwork and the wall
+around it fill the view. Clicking or tapping away from the paintings returns the viewpoint to the
+close panorama.
+The visitor can also move between artworks with the left and right arrow keys, jump directly to a
+numbered painting with a visible selector, and return to the overview with the up arrow. On a phone
+or tablet, the visitor can use touch to select and navigate paintings.
 
 **Why this priority**: Focus is what turns a static row into a browsable exhibition, and it is the
 only interaction the visitor gets. It also makes each restyled wall legible.
@@ -94,8 +103,9 @@ empty space and verify the viewpoint returns to the overview.
 
 1. **Given** the overview is displayed, **When** the visitor clicks a painting, **Then** the
    viewpoint moves to a position directly in front of that painting.
-2. **Given** a painting is in focus, **When** the visitor clicks outside any painting, **Then** the
-   viewpoint returns to the wide overview of the whole exhibition.
+2. **Given** a painting is in focus, **When** the visitor clicks or taps outside any painting,
+   **Then** the viewpoint returns to the close panorama, from which the visitor can move horizontally
+   through the row.
 3. **Given** a painting is in focus, **When** the transition runs, **Then** it is continuous and
    smooth, with no visible jump or snap.
 4. **Given** a painting is in focus, **When** the visitor clicks a different painting, **Then** the
@@ -105,6 +115,10 @@ empty space and verify the viewpoint returns to the overview.
    and left selects the last artwork; at either end it stays on that end artwork.
 6. **Given** an artwork is in focus, **When** the visitor presses the up arrow key, **Then** the
    viewpoint returns smoothly to the overview.
+7. **Given** the gallery is open, **When** the visitor selects a number from 1 to 25 in the
+   navigation selector, **Then** that painting moves into focus.
+8. **Given** the gallery is open on a touch device, **When** the visitor taps a painting or a
+   navigation control, **Then** the corresponding navigation action works without a keyboard.
 
 ---
 
@@ -193,9 +207,11 @@ accordingly with no rendering changes.
 
 - The visitor clicks repeatedly while a viewpoint transition is still running: the transition
   retargets to the most recent selection rather than queueing or freezing.
-- The visitor clicks the painting that is already in focus: the viewpoint stays where it is.
+- The visitor clicks or taps the painting that is already in focus: the viewpoint stays where it is.
 - A painting count of one, or a very large count: the exhibition remains navigable and the
   numbering stays correct.
+- The configured painting count changes: the numbered selector lists exactly the available works
+  and does not offer a number for a painting that is not configured.
 - A configured position places two paintings at the same spot: configuration validation fails with
   a clear duplicate-position error before the exhibition renders.
 - A configured image is missing, empty, or in a format the browser cannot decode: that painting
@@ -204,8 +220,8 @@ accordingly with no rendering changes.
   surface rather than failing to render.
 - A configuration omits an optional field such as artist or year: the exhibition renders and
   presents the piece without that detail rather than failing.
-- The browser window is very narrow or very wide: the exhibition fills the view and remains fully
-  visible.
+- The browser window is very narrow or very wide: the responsive exhibition fills the view and
+  remains usable.
 - The visitor prefers reduced motion: the viewpoint transition still runs and is still continuous,
   but completes in a small fraction of the normal duration.
 
@@ -231,18 +247,19 @@ accordingly with no rendering changes.
   number.
 - **FR-006**: Each artwork MUST have its own wall-panel configuration carrying a colour, roughness
   value, and named surface finish. Changing one wall configuration MUST NOT alter any other panel.
-  The starter exhibition MUST give every wall panel a different colour.
+  The starter exhibition MUST give every wall panel a different shade of white.
 - **FR-007**: Each painting's number, title, artist, and year MUST all be presented on its wall
-  panel, as text belonging to the 3D scene. The exhibition MUST contain no 2D user interface of any
-  kind, so descriptive information and labels live only inside the scene.
+  panel, as text belonging to the 3D scene. Descriptive information and labels MUST live only
+  inside the scene; the numbered navigation selector in FR-056 is the sole permitted 2D interface.
 - **FR-008**: The system MUST render successfully when optional descriptive fields are absent.
 
 **Viewpoint navigation**
 
 - **FR-009**: When the visitor clicks a painting, the viewpoint MUST move to a position directly in
   front of that painting.
-- **FR-010**: When the visitor clicks outside all paintings, the viewpoint MUST return to a wide
-  overview that shows the whole exhibition.
+- **FR-010**: When the visitor clicks outside all paintings, the viewpoint MUST return to a close
+  overview framed on a section of the row. The visitor MUST be able to move this overview
+  horizontally to inspect the full exhibition without fitting the entire row into one distant view.
 - **FR-011**: All viewpoint transitions MUST be continuous and smooth, with no visible snap.
 - **FR-012**: A new selection made during an in-progress transition MUST retarget the transition to
   the new selection.
@@ -358,7 +375,8 @@ the dev server, the test runner, and the production build — and not the render
 
 - **FR-048**: The system MUST NOT provide any visual interface for editing the exhibition. The
   configuration file is the only authoring surface.
-- **FR-049**: The rendered exhibition MUST fill the available view at any window size.
+- **FR-049**: The rendered exhibition MUST adapt to mobile, tablet, and desktop viewport sizes,
+  keeping the scene usable and the available navigation accessible.
 - **FR-050**: All user-facing text MUST be in English.
 - **FR-051**: The left and right arrow keys MUST move focus to the adjacent artwork with a continuous
   transition. From the overview, right MUST focus the first artwork and left MUST focus the last.
@@ -371,6 +389,23 @@ the dev server, the test runner, and the production build — and not the render
   visible in the overview and hidden while an artwork is focused; it MUST NOT be a 2D overlay.
 - **FR-054**: The gallery background MUST fade between black and grey behind the exhibition,
   keeping the paintings and their wall panels legible in the overview and focused views.
+- **FR-055**: The starter exhibition MUST contain exactly 25 paintings, while the configured count
+  remains changeable for student exercises.
+- **FR-056**: The visitor MUST be able to select any configured painting from a visible,
+  touch-friendly navigation selector. The starter selector MUST offer numbers 1 through 25, and
+  when the configured count changes, the selector MUST list exactly the available painting numbers.
+  This navigation control is permitted as an exception to the prohibition on 2D descriptive labels
+  and editing interfaces; it MUST NOT edit exhibition content.
+- **FR-057**: The exhibition MUST support touch navigation on phones and tablets, including tapping
+  a painting and using the numbered navigation selector without a keyboard.
+- **FR-058**: The exhibition layout and navigation controls MUST adapt to narrow mobile, tablet, and
+  desktop viewports while keeping the scene usable and its content accessible.
+- **FR-059**: Every wall panel in the starter exhibition MUST use a distinct shade of white.
+- **FR-060**: Staging and production deployments MUST use Cloudflare and MUST preserve the same
+  branch promotion, commit identity, and content guarantees defined in FR-028 through FR-042.
+- **FR-061**: The overview MUST frame a nearby section of the exhibition at a closer scale rather
+  than zooming out to fit all paintings at once. Visitors MUST be able to traverse the row
+  horizontally by dragging with a pointer or swiping on a touch screen.
 
 ### Key Entities
 
@@ -389,10 +424,10 @@ the dev server, the test runner, and the production build — and not the render
 
 ### Measurable Outcomes
 
-- **SC-001**: A visitor who has never seen the gallery can identify that it contains 24 separate,
-  individually numbered works within 15 seconds of the page finishing loading.
-- **SC-002**: A visitor can reach any specific painting by clicking it, in a single interaction,
-  without any on-screen control panel or menu.
+- **SC-001**: A visitor who has never seen the gallery can identify that it contains 25 separate,
+  individually numbered works from the numbered selector within 15 seconds of the page finishing loading.
+- **SC-002**: A visitor can reach any specific painting in a single interaction by clicking a visible
+  work or selecting its number, without an editing control panel.
 - **SC-003**: A student can change one artwork's wall colour and finish and its painting colour,
   then see those changes without changing any other wall, by editing configuration only — with no
   rendering file touched.
@@ -442,7 +477,18 @@ the dev server, the test runner, and the production build — and not the render
   return to the overview with the up arrow; boundary navigation never wraps to the opposite end.
 - **SC-023**: In the overview, a visitor can read “C1 Art Gallery” and the arrow-key instruction
   sign in the 3D scene against the black-to-grey fading background. Both signs are hidden in the
-  focused-artwork view, where the same background remains behind the artwork; no 2D overlay is used.
+  focused-artwork view, where the same background remains behind the artwork; neither sign uses a
+  2D overlay.
+- **SC-024**: The starter exhibition contains exactly 25 paintings, and a visitor can focus any one
+  of them by selecting its number from 1 to 25.
+- **SC-025**: A visitor can tap a painting and use the numbered selector successfully on a phone or
+  tablet without a keyboard.
+- **SC-026**: All 25 starter wall panels have distinct white shades, and the responsive layout
+  remains usable at mobile, tablet, and desktop viewport sizes.
+- **SC-027**: A staging push and an accepted production promotion deploy through Cloudflare, and the
+  production deployment resolves to the same commit that passed in staging.
+- **SC-028**: In the overview, fewer than 25 paintings are visible at once, and a visitor on desktop
+  or touch screens can move horizontally to inspect the full row.
 
 ## Assumptions
 
@@ -466,12 +512,12 @@ the dev server, the test runner, and the production build — and not the render
   user-selectable collections are out of scope.
 - Textures are generated in the browser rather than shipped as image files, so that no binary assets
   are required and the generation logic is itself a teaching surface.
-- The audience is students on modern desktop browsers capable of hardware-accelerated 3D rendering.
-  Mobile and tablet layout is not optimised, though the exhibition must remain visible at any window
-  size.
+- The audience includes visitors on modern desktop, tablet, and mobile browsers capable of
+  hardware-accelerated 3D rendering. The exhibition supports responsive layouts and touch
+  navigation on those devices.
 - Third-party runtime dependencies are limited to the stack already fixed in the project
   constitution, and each is used for exactly one role.
-- The 24-piece count is a starting default, not a fixed limit; the count lives in configuration.
+- The starter exhibition contains 25 paintings; the count remains configurable for student exercises.
 - The shared staging branch is a deliberate teaching constraint, not an oversight: coordinating a
   pull before a push is part of what the exercise is meant to teach. Its cost is that submissions
   are ephemeral in staging, which FR-037 and FR-038 state plainly rather than hide.
@@ -497,8 +543,8 @@ decision rather than an omission.
 - **A gallery management admin panel.** The same constraint as the editing interface, applied to
   exhibition lifecycle operations.
 - **Audio, video, and non-image media in artworks.** Images only.
-- **Optimised mobile and tablet layout.** The exhibition must remain visible at any window size, but
-  touch-first layout is not a goal.
+- **Content editing from the navigation selector.** The visible selector only navigates among works;
+  exhibition content remains code-configured.
 - **Analytics, telemetry, and usage tracking.**
 - **Repository permission configuration and the course lesson.** The lesson tells students to open
   a pull request to main after completing the exercise; the instructor handles promotion.

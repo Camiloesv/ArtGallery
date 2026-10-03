@@ -6,6 +6,28 @@ import {
 } from '../../src/config/exhibition';
 
 describe('exhibition configuration', () => {
+  it('starts with exactly 25 configured paintings', () => {
+    expect(starterExhibition.count).toBe(25);
+    expect(starterExhibition.stations).toHaveLength(25);
+  });
+
+  it('uses a different white shade for each starter wall', () => {
+    const colours = starterExhibition.stations
+      .slice(0, starterExhibition.count)
+      .map((station) => station.wall.color.toLowerCase());
+    const channels = colours.map((colour) =>
+      colour
+        .replace('#', '')
+        .match(/.{2}/g)!
+        .map((channel) => Number.parseInt(channel, 16)),
+    );
+
+    expect(new Set(colours).size).toBe(25);
+    expect(channels.every((rgb) => rgb.length === 3 && Math.min(...rgb) >= 224)).toBe(
+      true,
+    );
+  });
+
   it('accepts the starter exhibition', () => {
     expect(() => validateExhibition(starterExhibition)).not.toThrow();
   });

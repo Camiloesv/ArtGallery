@@ -4,9 +4,12 @@ import { starterExhibition } from './config/exhibition';
 import { CameraRig } from './scene/CameraRig';
 import { Exhibition } from './scene/Exhibition';
 import { nextGalleryFocus } from './navigation/galleryKeys';
+import { PaintingSelector } from './components/PaintingSelector';
 
 export function App() {
   const [focusedPosition, setFocusedPosition] = useState<number | null>(null);
+  const [overviewOffset, setOverviewOffset] = useState(0);
+  const stations = starterExhibition.stations.slice(0, starterExhibition.count);
   const reducedMotion =
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -40,10 +43,15 @@ export function App() {
 
   return (
     <main className="exhibition-shell">
+      <PaintingSelector
+        focusedPosition={focusedPosition}
+        onSelect={setFocusedPosition}
+        stations={stations}
+      />
       <Canvas
         aria-label="Interactive exhibition gallery"
         onPointerMissed={() => setFocusedPosition(null)}
-        camera={{ fov: 38, position: [0, 5.75, 42], near: 0.1, far: 180 }}
+        camera={{ fov: 38, position: [0, 7.5, 15], near: 0.1, far: 180 }}
         dpr={[1, 1.5]}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
@@ -67,11 +75,14 @@ export function App() {
         <Exhibition
           config={starterExhibition}
           focusedPosition={focusedPosition}
+          overviewOffset={overviewOffset}
+          onOverviewOffsetChange={setOverviewOffset}
           onSelect={setFocusedPosition}
         />
         <CameraRig
           count={starterExhibition.count}
           focusedPosition={focusedPosition}
+          overviewOffset={overviewOffset}
           onOverviewClick={() => setFocusedPosition(null)}
           reducedMotion={reducedMotion}
           spacing={starterExhibition.spacing}

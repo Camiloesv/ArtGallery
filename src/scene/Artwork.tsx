@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ThreeEvent } from '@react-three/fiber';
 import { TextureLoader, type Texture } from 'three';
 import { fitAspectRatio } from '../surfaces/fitAspectRatio';
+import { hasOverviewPanStarted } from '../navigation/overviewPan';
 
 type ArtworkProps = {
   color: string;
@@ -30,6 +31,8 @@ export function Artwork({
   const artworkResolution = imageResolution ?? 512;
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
+    // R3F reports pointer travel as click delta; keep a swipe from activating the painting.
+    if (hasOverviewPanStarted(0, event.delta)) return;
     onSelect(position);
   };
 

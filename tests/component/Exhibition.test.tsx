@@ -1,10 +1,28 @@
 import ReactThreeTestRenderer from '@react-three/test-renderer';
 import { MeshStandardMaterial, type Mesh } from 'three';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Exhibition } from '../../src/scene/Exhibition';
 import { starterExhibition } from '../../src/config/exhibition';
 
 describe('Exhibition', () => {
+  it('renders 25 starter paintings with their distinct white wall shades', async () => {
+    const renderer = await ReactThreeTestRenderer.create(
+      <Exhibition config={starterExhibition} onSelect={() => undefined} />,
+    );
+    const artworks = renderer.scene.findAllByProps({ name: 'artwork-surface' });
+    const walls = renderer.scene.findAllByProps({ name: 'wall-panel' });
+    const wallColours = walls.map((wall) =>
+      ((wall.instance as Mesh).material as MeshStandardMaterial).color.getHexString(),
+    );
+    const isWhiteShade = (colour: string) =>
+      colour.match(/.{2}/g)!.every((channel) => Number.parseInt(channel, 16) >= 224);
+
+    expect(artworks).toHaveLength(25);
+    expect(wallColours).toHaveLength(25);
+    expect(new Set(wallColours).size).toBe(25);
+    expect(wallColours.every(isWhiteShade)).toBe(true);
+  });
+
   it('shows overview signs and hides them when an artwork is focused', async () => {
     const renderer = await ReactThreeTestRenderer.create(
       <Exhibition config={starterExhibition} onSelect={() => undefined} />,
@@ -41,6 +59,29 @@ describe('Exhibition', () => {
     expect(() => renderer.scene.findByProps({ name: 'arrow-instructions' })).toThrow();
   });
 
+  it('scales overview signs down to fit a narrow viewport', async () => {
+    const renderer = await ReactThreeTestRenderer.create(
+      <Exhibition config={starterExhibition} onSelect={() => undefined} />,
+      { width: 390, height: 844 },
+    );
+    const signs = renderer.scene.findByProps({ name: 'overview-signs' });
+
+    expect(signs.instance.scale.x).toBeLessThan(1);
+  });
+
+  it('keeps overview signs centred above the visible section while panning', async () => {
+    const renderer = await ReactThreeTestRenderer.create(
+      <Exhibition
+        config={starterExhibition}
+        overviewOffset={5}
+        onSelect={() => undefined}
+      />,
+    );
+    const signs = renderer.scene.findByProps({ name: 'overview-signs' });
+
+    expect(signs.instance.position.x).toBe(5);
+  });
+
   it('mounts the generated black-to-grey backdrop behind the gallery', async () => {
     const renderer = await ReactThreeTestRenderer.create(
       <Exhibition config={starterExhibition} onSelect={() => undefined} />,
@@ -65,6 +106,18 @@ describe('Exhibition', () => {
     );
 
     expect(renderer.scene.findAllByProps({ name: 'artwork-surface' })).toHaveLength(5);
+  });
+
+  it('does not select an artwork after a horizontal pan gesture', async () => {
+    const onSelect = vi.fn();
+    const renderer = await ReactThreeTestRenderer.create(
+      <Exhibition config={starterExhibition} onSelect={onSelect} />,
+    );
+    const artwork = renderer.scene.findAllByProps({ name: 'artwork' })[0]!;
+
+    await renderer.fireEvent(artwork, 'click', { delta: 18, stopPropagation: vi.fn() });
+
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
   it('updates the rendered count when configuration changes', async () => {
