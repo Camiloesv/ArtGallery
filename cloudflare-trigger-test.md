@@ -8,3 +8,4 @@ Trigger 06/20
 Trigger 07/20
 Trigger 08/20
 Trigger 09/20
+Trigger 10/20
