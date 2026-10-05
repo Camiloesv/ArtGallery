@@ -18,3 +18,4 @@ Trigger 16/20
 Trigger 17/20
 Trigger 18/20
 Trigger 19/20
+Trigger 20/20
