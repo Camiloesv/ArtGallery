@@ -6,3 +6,4 @@ Trigger 04/20
 Trigger 05/20
 Trigger 06/20
 Trigger 07/20
+Trigger 08/20
