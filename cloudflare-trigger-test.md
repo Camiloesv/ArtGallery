@@ -16,3 +16,4 @@ Trigger 14/20
 Trigger 15/20
 Trigger 16/20
 Trigger 17/20
+Trigger 18/20
